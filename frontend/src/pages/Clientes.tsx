@@ -47,7 +47,14 @@ export default function Clientes() {
   const openModal = (cliente?: Cliente) => {
     if (cliente) {
       setEditingCliente(cliente)
-      reset(cliente)
+      reset({
+        razon_social: cliente.razon_social,
+        cuit: cliente.cuit,
+        condicion_iva: cliente.condicion_iva,
+        domicilio: cliente.domicilio || '',
+        email: cliente.email || '',
+        telefono: cliente.telefono || '',
+      })
     } else {
       setEditingCliente(null)
       reset({

@@ -5,13 +5,13 @@ import { FileText, Download, Eye, Plus, Search, X } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { getFacturas, getFactura, getFacturaPdfUrl } from '../services/api'
-import { TIPOS_COMPROBANTE, Factura } from '../types'
+import { TIPOS_COMPROBANTE, FacturaDetalle } from '../types'
 
 export default function Facturas() {
   const [busqueda, setBusqueda] = useState('')
   const [tipoFiltro, setTipoFiltro] = useState<number | undefined>()
   const [page, setPage] = useState(0)
-  const [selectedFactura, setSelectedFactura] = useState<Factura | null>(null)
+  const [selectedFactura, setSelectedFactura] = useState<FacturaDetalle | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const limit = 20
 
