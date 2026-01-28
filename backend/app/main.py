@@ -1,0 +1,106 @@
+"""Punto de entrada principal de la aplicación FastAPI."""
+
+import os
+from contextlib import asynccontextmanager
+from pathlib import Path
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+from app.config import get_settings
+from app.models import Base, engine
+from app.routers import clientes, facturas, arca
+
+settings = get_settings()
+
+# Directorio del frontend estático
+STATIC_DIR = Path(__file__).parent.parent / "static"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Maneja el ciclo de vida de la aplicación."""
+    # Startup: crear tablas
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    # Shutdown: cerrar conexiones
+    await engine.dispose()
+
+
+app = FastAPI(
+    title=settings.app_name,
+    description="API para emisión de facturas electrónicas conectada a ARCA Argentina",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# Configurar CORS
+allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+# Agregar URL de frontend en producción (Vercel)
+if os.getenv("FRONTEND_URL"):
+    allowed_origins.append(os.getenv("FRONTEND_URL"))
+# Permitir cualquier subdominio de vercel.app en producción
+if not settings.debug:
+    allowed_origins.append("https://*.vercel.app")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Permite todos los subdominios de Vercel
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Registrar routers
+app.include_router(clientes.router, prefix="/api/clientes", tags=["Clientes"])
+app.include_router(facturas.router, prefix="/api/facturas", tags=["Facturas"])
+app.include_router(arca.router, prefix="/api/arca", tags=["ARCA"])
+
+# Servir frontend estático en producción
+if STATIC_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+
+
+@app.get("/")
+async def root():
+    """Endpoint raíz."""
+    return {
+        "app": settings.app_name,
+        "version": "1.0.0",
+        "docs": "/docs",
+        "arca_mode": "producción" if settings.arca_production else "testing",
+    }
+
+
+@app.get("/health")
+async def health_check():
+    """Verifica el estado de la aplicación."""
+    return {"status": "healthy"}
+
+
+# Servir el frontend para rutas no-API (SPA catch-all)
+@app.get("/{full_path:path}")
+async def serve_frontend(request: Request, full_path: str):
+    """Sirve el frontend para rutas que no son de la API."""
+    # Si es una ruta de API, dejar que FastAPI maneje el 404
+    if full_path.startswith("api/"):
+        return {"detail": "Not Found"}
+    
+    # Servir index.html para rutas del frontend (SPA)
+    index_file = STATIC_DIR / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    
+    # Si no hay frontend, mostrar info de la API
+    return {
+        "app": settings.app_name,
+        "version": "1.0.0",
+        "docs": "/docs",
+        "arca_mode": "producción" if settings.arca_production else "testing",
+    }

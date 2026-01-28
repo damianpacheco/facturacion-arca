@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: facturacion-arca-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ARCA_CUIT
+        sync: false
+      - key: ARCA_ACCESS_TOKEN
+        sync: false
+      - key: ARCA_PRODUCTION
+        value: "false"
+      - key: ARCA_PUNTO_VENTA
+        value: "1"
+      - key: SECRET_KEY
+        generateValue: true
