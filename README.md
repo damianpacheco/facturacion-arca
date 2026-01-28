@@ -1,6 +1,6 @@
 # Facturación ARCA
 
-Sistema de emisión de facturas electrónicas conectado a ARCA (ex AFIP) Argentina.
+Sistema de emisión de facturas electrónicas conectado a ARCA (ex AFIP) Argentina, con integración para TiendaNube.
 
 ## Características
 
@@ -10,6 +10,7 @@ Sistema de emisión de facturas electrónicas conectado a ARCA (ex AFIP) Argenti
 - Generación de PDF con código QR según normativa
 - Soporte para Responsable Inscripto y Monotributista
 - Modo testing sin certificados
+- **Integración con TiendaNube**: Facturar órdenes automática o manualmente
 
 ## Tecnologías
 
@@ -23,9 +24,14 @@ Sistema de emisión de facturas electrónicas conectado a ARCA (ex AFIP) Argenti
 ### Frontend
 - React 18 + TypeScript
 - Vite
-- TailwindCSS
+- Nimbus Design System (TiendaNube)
+- Nexo SDK (integración TiendaNube)
 - React Query
 - React Hook Form
+
+### Hosting
+- **Backend**: Render
+- **Frontend**: Vercel
 
 ## Instalación
 
@@ -173,6 +179,59 @@ Para usar el sistema en producción:
 Con el servidor corriendo, acceder a:
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
+
+## Integración con TiendaNube
+
+Esta aplicación puede funcionar como una **aplicación integrada** dentro del panel de administración de TiendaNube.
+
+### Configuración
+
+1. **Crear aplicación en Portal de Socios:**
+   - Ir a https://partners.tiendanube.com
+   - Crear nueva aplicación con disponibilidad "Para Sus Clientes"
+   - Configurar permisos: `read_orders`, `write_orders`, `read_customers`
+   - Obtener `client_id` y `client_secret`
+
+2. **Configurar variables de entorno:**
+
+   **Backend (.env):**
+   ```env
+   TN_CLIENT_ID=tu_client_id
+   TN_CLIENT_SECRET=tu_client_secret
+   TN_REDIRECT_URI=https://tu-backend.onrender.com/api/tiendanube/callback
+   TN_AUTO_INVOICE=false
+   TN_DEFAULT_INVOICE_TYPE=6
+   ```
+
+   **Frontend (.env.production):**
+   ```env
+   VITE_TN_CLIENT_ID=tu_client_id
+   ```
+
+3. **Conectar una tienda:**
+   - Desde la app, ir a Configuración > TiendaNube
+   - Hacer clic en "Conectar TiendaNube"
+   - Autorizar la aplicación en TiendaNube
+
+### Funcionalidades TiendaNube
+
+- **Facturación manual**: Ver órdenes y facturar individualmente
+- **Facturación automática**: Emitir factura automáticamente al pagarse una orden
+- **Webhooks**: Recibe eventos `order/paid` y `order/cancelled`
+
+### API Endpoints TiendaNube
+
+- `GET /api/tiendanube/install` - Inicia OAuth
+- `GET /api/tiendanube/callback` - Callback OAuth
+- `GET /api/tiendanube/status` - Estado de conexión
+- `PUT /api/tiendanube/config` - Actualizar configuración
+- `POST /api/tiendanube/disconnect` - Desconectar tienda
+
+### API Endpoints Órdenes
+
+- `GET /api/ordenes-tn` - Listar órdenes
+- `GET /api/ordenes-tn/{id}` - Detalle de orden
+- `POST /api/ordenes-tn/{id}/facturar` - Facturar orden
 
 ## Licencia
 

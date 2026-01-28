@@ -6,6 +6,7 @@ import {
   PlusCircleIcon,
   UserIcon,
   CogIcon,
+  StoreIcon,
 } from '@nimbus-ds/icons'
 
 interface LayoutProps {
@@ -17,6 +18,7 @@ const navItems = [
   { path: '/facturas', icon: FileIcon, label: 'Facturas' },
   { path: '/facturas/nueva', icon: PlusCircleIcon, label: 'Nueva Factura' },
   { path: '/clientes', icon: UserIcon, label: 'Clientes' },
+  { path: '/ordenes-tiendanube', icon: StoreIcon, label: 'TiendaNube' },
   { path: '/configuracion', icon: CogIcon, label: 'Configuración' },
 ]
 

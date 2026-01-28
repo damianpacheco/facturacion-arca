@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 
 from app.config import get_settings
 from app.models import Base, engine
-from app.routers import clientes, facturas, arca
+from app.routers import clientes, facturas, arca, tiendanube, ordenes_tn, webhooks
 
 settings = get_settings()
 
@@ -47,11 +47,14 @@ if os.getenv("FRONTEND_URL"):
 # Permitir cualquier subdominio de vercel.app en producción
 if not settings.debug:
     allowed_origins.append("https://*.vercel.app")
+# Permitir TiendaNube Admin (para apps integradas)
+allowed_origins.append("https://www.tiendanube.com")
+allowed_origins.append("https://*.mitiendanube.com")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",  # Permite todos los subdominios de Vercel
+    allow_origin_regex=r"https://.*\.(vercel\.app|mitiendanube\.com|tiendanube\.com)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -61,6 +64,9 @@ app.add_middleware(
 app.include_router(clientes.router, prefix="/api/clientes", tags=["Clientes"])
 app.include_router(facturas.router, prefix="/api/facturas", tags=["Facturas"])
 app.include_router(arca.router, prefix="/api/arca", tags=["ARCA"])
+app.include_router(tiendanube.router, prefix="/api/tiendanube", tags=["TiendaNube"])
+app.include_router(ordenes_tn.router, prefix="/api/ordenes-tn", tags=["Órdenes TiendaNube"])
+app.include_router(webhooks.router, prefix="/api/webhooks", tags=["Webhooks"])
 
 # Servir frontend estático en producción
 if STATIC_DIR.exists():

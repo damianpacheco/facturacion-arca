@@ -5,6 +5,7 @@ import Facturas from './pages/Facturas'
 import NuevaFactura from './pages/NuevaFactura'
 import Clientes from './pages/Clientes'
 import Configuracion from './pages/Configuracion'
+import OrdenesTiendaNube from './pages/OrdenesTiendaNube'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/facturas" element={<Facturas />} />
         <Route path="/facturas/nueva" element={<NuevaFactura />} />
         <Route path="/clientes" element={<Clientes />} />
+        <Route path="/ordenes-tiendanube" element={<OrdenesTiendaNube />} />
         <Route path="/configuracion" element={<Configuracion />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -30,6 +30,13 @@ class Settings(BaseSettings):
     emisor_ingresos_brutos: str = ""
     emisor_inicio_actividades: str = ""
 
+    # TiendaNube Integration
+    tn_client_id: str = ""
+    tn_client_secret: str = ""
+    tn_redirect_uri: str = ""
+    tn_auto_invoice: bool = False  # Facturación automática activada/desactivada
+    tn_default_invoice_type: int = 6  # Factura B por defecto
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

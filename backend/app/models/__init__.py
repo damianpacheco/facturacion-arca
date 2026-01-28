@@ -3,6 +3,7 @@
 from .base import Base, engine, async_session, get_db
 from .cliente import Cliente
 from .factura import Factura, ItemFactura
+from .tiendanube import TiendaNubeStore, TiendaNubeOrder
 
 __all__ = [
     "Base",
@@ -12,4 +13,6 @@ __all__ = [
     "Cliente",
     "Factura",
     "ItemFactura",
+    "TiendaNubeStore",
+    "TiendaNubeOrder",
 ]

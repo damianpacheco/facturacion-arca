@@ -5,6 +5,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import './index.css'
 
+// Inicializar Nexo para integración con TiendaNube
+import { initializeNexo } from './services/nexo'
+
+// Iniciar conexión con TiendaNube si estamos en un iframe
+initializeNexo().then((connected) => {
+  if (connected) {
+    console.log('Facturación ARCA: Conectado con TiendaNube Admin')
+  }
+})
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
