@@ -1,5 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
-import { Settings, Server, Key, FileText, AlertCircle, CheckCircle } from 'lucide-react'
+import {
+  Title,
+  Text,
+  Card,
+  Box,
+  Table,
+  Tag,
+  Alert,
+  Spinner,
+} from '@nimbus-ds/components'
+import {
+  CogIcon,
+  FileIcon,
+  LockIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+} from '@nimbus-ds/icons'
 import { getEstadoARCA, getPuntosVenta, getTiposComprobante } from '../services/api'
 
 export default function Configuracion() {
@@ -21,147 +37,196 @@ export default function Configuracion() {
   })
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Configuración</h1>
+    <Box display="flex" flexDirection="column" gap="6">
+      <Title as="h1">Configuración</Title>
 
-      <div className="grid gap-6">
-        {/* Estado de conexión ARCA */}
-        <div className="card">
-          <div className="flex items-center gap-3 mb-4">
-            <Server className="text-primary-600" size={24} />
-            <h2 className="text-lg font-semibold">Conexión con ARCA</h2>
-          </div>
-
+      {/* Estado de conexión ARCA */}
+      <Card>
+        <Card.Header>
+          <Box display="flex" alignItems="center" gap="3">
+            <CogIcon size="medium" />
+            <Title as="h3">Conexión con ARCA</Title>
+          </Box>
+        </Card.Header>
+        <Card.Body>
           {loadingEstado ? (
-            <div className="flex items-center gap-2 text-gray-500">
-              <div className="animate-spin w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full"></div>
-              Verificando conexión...
-            </div>
+            <Box display="flex" alignItems="center" gap="2">
+              <Spinner size="small" />
+              <Text color="neutral-textLow">Verificando conexión...</Text>
+            </Box>
           ) : estadoArca?.estado === 'conectado' ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle size={20} />
-                <span className="font-medium">Conectado correctamente</span>
-              </div>
+            <Box display="flex" flexDirection="column" gap="4">
+              <Box display="flex" alignItems="center" gap="2">
+                <CheckCircleIcon size="medium" />
+                <Text fontWeight="medium" color="success-textLow">
+                  Conectado correctamente
+                </Text>
+              </Box>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="text-sm text-gray-500">Modo</p>
-                  <p className="font-medium capitalize">{estadoArca.modo}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">CUIT</p>
-                  <p className="font-medium font-mono">{estadoArca.cuit}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Punto de Venta</p>
-                  <p className="font-medium">{estadoArca.punto_venta}</p>
-                </div>
-              </div>
-            </div>
+              <Box
+                padding="4"
+                backgroundColor="neutral-surface"
+                borderRadius="2"
+                display="flex"
+                gap="4"
+                flexWrap="wrap"
+              >
+                <Box flex="1" minWidth="120px">
+                  <Text fontSize="caption" color="neutral-textLow">Modo</Text>
+                  <Text fontWeight="medium">
+                    {estadoArca.modo.charAt(0).toUpperCase() + estadoArca.modo.slice(1)}
+                  </Text>
+                </Box>
+                <Box flex="1" minWidth="120px">
+                  <Text fontSize="caption" color="neutral-textLow">CUIT</Text>
+                  <Text fontWeight="medium">{estadoArca.cuit}</Text>
+                </Box>
+                <Box flex="1" minWidth="120px">
+                  <Text fontSize="caption" color="neutral-textLow">Punto de Venta</Text>
+                  <Text fontWeight="medium">{estadoArca.punto_venta}</Text>
+                </Box>
+              </Box>
+            </Box>
           ) : (
-            <div className="flex items-center gap-2 text-yellow-600">
-              <AlertCircle size={20} />
-              <span>{estadoArca?.mensaje || 'No se pudo conectar con ARCA'}</span>
-            </div>
+            <Box display="flex" alignItems="center" gap="2">
+              <ExclamationCircleIcon size="medium" />
+              <Text color="warning-textLow">
+                {estadoArca?.mensaje || 'No se pudo conectar con ARCA'}
+              </Text>
+            </Box>
           )}
-        </div>
+        </Card.Body>
+      </Card>
 
-        {/* Puntos de Venta */}
-        {puntosVenta && (
-          <div className="card">
-            <div className="flex items-center gap-3 mb-4">
-              <FileText className="text-primary-600" size={24} />
-              <h2 className="text-lg font-semibold">Puntos de Venta Habilitados</h2>
-            </div>
-
+      {/* Puntos de Venta */}
+      {puntosVenta && (
+        <Card>
+          <Card.Header>
+            <Box display="flex" alignItems="center" gap="3">
+              <FileIcon size="medium" />
+              <Title as="h3">Puntos de Venta Habilitados</Title>
+            </Box>
+          </Card.Header>
+          <Card.Body padding="none">
             {puntosVenta.puntos_venta?.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="table-header">Número</th>
-                      <th className="table-header">Tipo</th>
-                      <th className="table-header">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {(puntosVenta.puntos_venta as Array<{ Nro: number; EmisionTipo: string; Bloqueado: string }>).map((pv) => (
-                      <tr key={pv.Nro}>
-                        <td className="table-cell font-mono">{String(pv.Nro).padStart(4, '0')}</td>
-                        <td className="table-cell">{pv.EmisionTipo}</td>
-                        <td className="table-cell">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            pv.Bloqueado === 'N' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {pv.Bloqueado === 'N' ? 'Activo' : 'Bloqueado'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table>
+                <Table.Head>
+                  <Table.Row>
+                    <Table.Cell as="th">Número</Table.Cell>
+                    <Table.Cell as="th">Tipo</Table.Cell>
+                    <Table.Cell as="th">Estado</Table.Cell>
+                  </Table.Row>
+                </Table.Head>
+                <Table.Body>
+                  {(puntosVenta.puntos_venta as Array<{ Nro: number; EmisionTipo: string; Bloqueado: string }>).map((pv) => (
+                    <Table.Row key={pv.Nro}>
+                      <Table.Cell>
+                        <Text fontSize="caption">{String(pv.Nro).padStart(4, '0')}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{pv.EmisionTipo}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Tag appearance={pv.Bloqueado === 'N' ? 'success' : 'danger'}>
+                          {pv.Bloqueado === 'N' ? 'Activo' : 'Bloqueado'}
+                        </Tag>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table>
             ) : (
-              <p className="text-gray-500">No hay puntos de venta habilitados</p>
+              <Box padding="4">
+                <Text color="neutral-textLow">No hay puntos de venta habilitados</Text>
+              </Box>
             )}
-          </div>
-        )}
+          </Card.Body>
+        </Card>
+      )}
 
-        {/* Información de certificados */}
-        <div className="card">
-          <div className="flex items-center gap-3 mb-4">
-            <Key className="text-primary-600" size={24} />
-            <h2 className="text-lg font-semibold">Certificados Digitales</h2>
-          </div>
-
-          <div className="space-y-4">
-            <p className="text-gray-600">
+      {/* Información de certificados */}
+      <Card>
+        <Card.Header>
+          <Box display="flex" alignItems="center" gap="3">
+            <LockIcon size="medium" />
+            <Title as="h3">Certificados Digitales</Title>
+          </Box>
+        </Card.Header>
+        <Card.Body>
+          <Box display="flex" flexDirection="column" gap="4">
+            <Text>
               {estadoArca?.modo === 'testing' ? (
                 <>
-                  <span className="font-medium text-blue-600">Modo Testing:</span> Estás usando el CUIT de demostración de ARCA.
+                  <Text as="span" fontWeight="medium" color="primary-interactive">
+                    Modo Testing:
+                  </Text>{' '}
+                  Estás usando el CUIT de demostración de ARCA.
                   Las facturas emitidas no tienen validez fiscal.
                 </>
               ) : (
                 <>
-                  <span className="font-medium text-green-600">Modo Producción:</span> Las facturas emitidas tienen validez fiscal.
+                  <Text as="span" fontWeight="medium" color="success-textLow">
+                    Modo Producción:
+                  </Text>{' '}
+                  Las facturas emitidas tienen validez fiscal.
                 </>
               )}
-            </p>
+            </Text>
 
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h3 className="font-medium text-blue-800 mb-2">Para pasar a producción necesitás:</h3>
-              <ol className="list-decimal list-inside text-blue-700 space-y-1 text-sm">
-                <li>Generar un certificado digital desde ARCA</li>
-                <li>Crear una Clave Privada (.key)</li>
-                <li>Colocar ambos archivos en la carpeta <code className="bg-blue-100 px-1 rounded">backend/certs/</code></li>
-                <li>Configurar las variables de entorno en <code className="bg-blue-100 px-1 rounded">.env</code></li>
-              </ol>
-            </div>
-          </div>
-        </div>
+            <Alert appearance="primary" title="Para pasar a producción necesitás:">
+              <Box as="ol" display="flex" flexDirection="column" gap="1" paddingLeft="4">
+                <li>
+                  <Text fontSize="caption">1. Generar un certificado digital desde ARCA</Text>
+                </li>
+                <li>
+                  <Text fontSize="caption">2. Crear una Clave Privada (.key)</Text>
+                </li>
+                <li>
+                  <Text fontSize="caption">3. Colocar ambos archivos en la carpeta backend/certs/</Text>
+                </li>
+                <li>
+                  <Text fontSize="caption">4. Configurar las variables de entorno en .env</Text>
+                </li>
+              </Box>
+            </Alert>
+          </Box>
+        </Card.Body>
+      </Card>
 
-        {/* Tipos de comprobante disponibles */}
-        {tiposComprobante && (
-          <div className="card">
-            <div className="flex items-center gap-3 mb-4">
-              <Settings className="text-primary-600" size={24} />
-              <h2 className="text-lg font-semibold">Tipos de Comprobante Disponibles</h2>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      {/* Tipos de comprobante disponibles */}
+      {tiposComprobante && (
+        <Card>
+          <Card.Header>
+            <Box display="flex" alignItems="center" gap="3">
+              <CogIcon size="medium" />
+              <Title as="h3">Tipos de Comprobante Disponibles</Title>
+            </Box>
+          </Card.Header>
+          <Card.Body>
+            <Box display="flex" gap="2" flexWrap="wrap">
               {(tiposComprobante.tipos as Array<{ Id: number; Desc: string }>)
                 .filter((t) => [1, 3, 6, 8, 11, 13].includes(t.Id))
                 .map((tipo) => (
-                  <div key={tipo.Id} className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500">Código {tipo.Id}</p>
-                    <p className="font-medium text-sm">{tipo.Desc}</p>
-                  </div>
+                  <Box
+                    key={tipo.Id}
+                    padding="3"
+                    backgroundColor="neutral-surface"
+                    borderRadius="2"
+                    minWidth="150px"
+                    flex="1"
+                  >
+                    <Text fontSize="caption" color="neutral-textLow">
+                      Código {tipo.Id}
+                    </Text>
+                    <Text fontWeight="medium" fontSize="caption">
+                      {tipo.Desc}
+                    </Text>
+                  </Box>
                 ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+            </Box>
+          </Card.Body>
+        </Card>
+      )}
+    </Box>
   )
 }

@@ -1,8 +1,21 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm, useFieldArray } from 'react-hook-form'
-import { Plus, Trash2, AlertCircle, CheckCircle } from 'lucide-react'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import {
+  Title,
+  Text,
+  Card,
+  Box,
+  Input,
+  Select,
+  Textarea,
+  Button,
+  Alert,
+  Label,
+  IconButton,
+} from '@nimbus-ds/components'
+import { PlusCircleIcon, TrashIcon } from '@nimbus-ds/icons'
 import { getClientes, createFactura, getUltimoComprobante } from '../services/api'
 import { TIPOS_COMPROBANTE, ALICUOTAS_IVA, CONCEPTOS, type FacturaCreate } from '../types'
 
@@ -109,217 +122,277 @@ export default function NuevaFactura() {
   const discriminaIva = [1, 2, 3, 6, 7, 8].includes(Number(tipoComprobante))
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Nueva Factura</h1>
+    <Box display="flex" flexDirection="column" gap="6">
+      <Title as="h1">Nueva Factura</Title>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
-          <AlertCircle size={20} />
+        <Alert appearance="danger" title="Error" onRemove={() => setError(null)}>
           {error}
-        </div>
+        </Alert>
       )}
 
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
-          <CheckCircle size={20} />
+        <Alert appearance="success" title="Éxito" onRemove={() => setSuccess(null)}>
           {success}
-        </div>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Box display="flex" gap="6" flexDirection={{ xs: 'column', lg: 'row' }}>
           {/* Columna izquierda - Datos del comprobante */}
-          <div className="lg:col-span-2 space-y-6">
+          <Box flex="2" display="flex" flexDirection="column" gap="6">
             {/* Datos básicos */}
-            <div className="card">
-              <h2 className="text-lg font-semibold mb-4">Datos del Comprobante</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Tipo de Comprobante</label>
-                  <select
-                    className="input"
-                    {...register('tipo_comprobante', { required: true })}
-                  >
-                    {TIPOS_COMPROBANTE.map((tipo) => (
-                      <option key={tipo.codigo} value={tipo.codigo}>
-                        {tipo.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <Card>
+              <Card.Header>
+                <Title as="h3">Datos del Comprobante</Title>
+              </Card.Header>
+              <Card.Body>
+                <Box display="flex" flexWrap="wrap" gap="4">
+                  <Box flex="1" minWidth="200px">
+                    <Label htmlFor="tipo_comprobante">Tipo de Comprobante</Label>
+                    <Controller
+                      name="tipo_comprobante"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          id="tipo_comprobante"
+                          name={field.name}
+                          value={String(field.value)}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        >
+                          {TIPOS_COMPROBANTE.map((tipo) => (
+                            <Select.Option key={tipo.codigo} label={tipo.nombre} value={String(tipo.codigo)} />
+                          ))}
+                        </Select>
+                      )}
+                    />
+                  </Box>
 
-                <div>
-                  <label className="label">Próximo Número</label>
-                  <input
-                    type="text"
-                    className="input bg-gray-50"
-                    value={ultimoComprobante ? `0001-${String(ultimoComprobante.ultimo_numero + 1).padStart(8, '0')}` : 'Cargando...'}
-                    disabled
-                  />
-                </div>
+                  <Box flex="1" minWidth="200px">
+                    <Label htmlFor="proximo_numero">Próximo Número</Label>
+                    <Input
+                      id="proximo_numero"
+                      type="text"
+                      value={ultimoComprobante ? `0001-${String(ultimoComprobante.ultimo_numero + 1).padStart(8, '0')}` : 'Cargando...'}
+                      disabled
+                    />
+                  </Box>
 
-                <div>
-                  <label className="label">Cliente</label>
-                  <select
-                    className="input"
-                    {...register('cliente_id', { required: 'Seleccione un cliente' })}
-                  >
-                    <option value="">Seleccionar cliente...</option>
-                    {clientes?.items.map((cliente) => (
-                      <option key={cliente.id} value={cliente.id}>
-                        {cliente.razon_social} ({cliente.cuit})
-                      </option>
-                    ))}
-                  </select>
-                  {errors.cliente_id && (
-                    <p className="text-red-500 text-sm mt-1">{errors.cliente_id.message}</p>
-                  )}
-                </div>
+                  <Box flex="1" minWidth="200px">
+                    <Label htmlFor="cliente_id">Cliente</Label>
+                    <Controller
+                      name="cliente_id"
+                      control={control}
+                      rules={{ required: 'Seleccione un cliente' }}
+                      render={({ field }) => (
+                        <Select
+                          id="cliente_id"
+                          name={field.name}
+                          value={String(field.value || '')}
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
+                          appearance={errors.cliente_id ? 'danger' : undefined}
+                        >
+                          <Select.Option label="Seleccionar cliente..." value="" />
+                          {clientes?.items.map((cliente) => (
+                            <Select.Option key={cliente.id} label={`${cliente.razon_social} (${cliente.cuit})`} value={String(cliente.id)} />
+                          ))}
+                        </Select>
+                      )}
+                    />
+                    {errors.cliente_id && (
+                      <Text fontSize="caption" color="danger-textLow">
+                        {errors.cliente_id.message}
+                      </Text>
+                    )}
+                  </Box>
 
-                <div>
-                  <label className="label">Concepto</label>
-                  <select className="input" {...register('concepto')}>
-                    {CONCEPTOS.map((concepto) => (
-                      <option key={concepto.codigo} value={concepto.codigo}>
-                        {concepto.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
+                  <Box flex="1" minWidth="200px">
+                    <Label htmlFor="concepto">Concepto</Label>
+                    <Controller
+                      name="concepto"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          id="concepto"
+                          name={field.name}
+                          value={String(field.value)}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        >
+                          {CONCEPTOS.map((concepto) => (
+                            <Select.Option key={concepto.codigo} label={concepto.nombre} value={String(concepto.codigo)} />
+                          ))}
+                        </Select>
+                      )}
+                    />
+                  </Box>
+                </Box>
+              </Card.Body>
+            </Card>
 
             {/* Items */}
-            <div className="card">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Detalle</h2>
-                <button
-                  type="button"
-                  className="btn-secondary flex items-center gap-1 text-sm"
-                  onClick={() => append({ descripcion: '', cantidad: 1, precio_unitario: 0, alicuota_iva: 5 })}
-                >
-                  <Plus size={16} />
-                  Agregar ítem
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {fields.map((field, index) => (
-                  <div key={field.id} className="flex gap-3 items-start p-4 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <label className="label">Descripción</label>
-                      <input
-                        type="text"
-                        className="input"
-                        placeholder="Producto o servicio"
-                        {...register(`items.${index}.descripcion`, { required: true })}
-                      />
-                    </div>
-                    <div className="w-24">
-                      <label className="label">Cantidad</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        className="input"
-                        {...register(`items.${index}.cantidad`, { required: true, min: 0.01 })}
-                      />
-                    </div>
-                    <div className="w-32">
-                      <label className="label">Precio Unit.</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        className="input"
-                        {...register(`items.${index}.precio_unitario`, { required: true, min: 0 })}
-                      />
-                    </div>
-                    {discriminaIva && (
-                      <div className="w-28">
-                        <label className="label">IVA</label>
-                        <select className="input" {...register(`items.${index}.alicuota_iva`)}>
-                          {ALICUOTAS_IVA.map((alicuota) => (
-                            <option key={alicuota.codigo} value={alicuota.codigo}>
-                              {alicuota.nombre}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    <div className="pt-6">
-                      <button
-                        type="button"
-                        className="p-2 text-red-500 hover:bg-red-50 rounded"
-                        onClick={() => fields.length > 1 && remove(index)}
-                        disabled={fields.length === 1}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Card>
+              <Card.Header>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Title as="h3">Detalle</Title>
+                  <Button
+                    type="button"
+                    appearance="neutral"
+                    onClick={() => append({ descripcion: '', cantidad: 1, precio_unitario: 0, alicuota_iva: 5 })}
+                  >
+                    <PlusCircleIcon size="small" />
+                    Agregar ítem
+                  </Button>
+                </Box>
+              </Card.Header>
+              <Card.Body>
+                <Box display="flex" flexDirection="column" gap="4">
+                  {fields.map((field, index) => (
+                    <Box
+                      key={field.id}
+                      padding="4"
+                      backgroundColor="neutral-surface"
+                      borderRadius="2"
+                      display="flex"
+                      gap="3"
+                      alignItems="flex-start"
+                      flexWrap="wrap"
+                    >
+                      <Box flex="1" minWidth="200px">
+                        <Label htmlFor={`items.${index}.descripcion`}>Descripción</Label>
+                        <Input
+                          id={`items.${index}.descripcion`}
+                          type="text"
+                          placeholder="Producto o servicio"
+                          {...register(`items.${index}.descripcion`, { required: true })}
+                        />
+                      </Box>
+                      <Box width="100px">
+                        <Label htmlFor={`items.${index}.cantidad`}>Cantidad</Label>
+                        <Input
+                          id={`items.${index}.cantidad`}
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          {...register(`items.${index}.cantidad`, { required: true, min: 0.01 })}
+                        />
+                      </Box>
+                      <Box width="120px">
+                        <Label htmlFor={`items.${index}.precio_unitario`}>Precio Unit.</Label>
+                        <Input
+                          id={`items.${index}.precio_unitario`}
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...register(`items.${index}.precio_unitario`, { required: true, min: 0 })}
+                        />
+                      </Box>
+                      {discriminaIva && (
+                        <Box width="120px">
+                          <Label htmlFor={`items.${index}.alicuota_iva`}>IVA</Label>
+                          <Controller
+                            name={`items.${index}.alicuota_iva`}
+                            control={control}
+                            render={({ field: ivaField }) => (
+                              <Select
+                                id={`items.${index}.alicuota_iva`}
+                                name={ivaField.name}
+                                value={String(ivaField.value)}
+                                onChange={(e) => ivaField.onChange(Number(e.target.value))}
+                              >
+                                {ALICUOTAS_IVA.map((alicuota) => (
+                                  <Select.Option key={alicuota.codigo} label={alicuota.nombre} value={String(alicuota.codigo)} />
+                                ))}
+                              </Select>
+                            )}
+                          />
+                        </Box>
+                      )}
+                      <Box paddingTop="6">
+                        <IconButton
+                          size="2rem"
+                          source={<TrashIcon size="small" />}
+                          onClick={() => fields.length > 1 && remove(index)}
+                          disabled={fields.length === 1}
+                        />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Card.Body>
+            </Card>
 
             {/* Observaciones */}
-            <div className="card">
-              <label className="label">Observaciones</label>
-              <textarea
-                className="input"
-                rows={3}
-                placeholder="Observaciones opcionales..."
-                {...register('observaciones')}
-              />
-            </div>
-          </div>
+            <Card>
+              <Card.Body>
+                <Label htmlFor="observaciones">Observaciones</Label>
+                <Textarea
+                  id="observaciones"
+                  placeholder="Observaciones opcionales..."
+                  lines={3}
+                  {...register('observaciones')}
+                />
+              </Card.Body>
+            </Card>
+          </Box>
 
           {/* Columna derecha - Totales */}
-          <div>
-            <div className="card sticky top-8">
-              <h2 className="text-lg font-semibold mb-4">Resumen</h2>
+          <Box flex="1" minWidth="280px">
+            <Card>
+              <Card.Header>
+                <Title as="h3">Resumen</Title>
+              </Card.Header>
+              <Card.Body>
+                <Box display="flex" flexDirection="column" gap="3">
+                  {discriminaIva && (
+                    <>
+                      <Box display="flex" justifyContent="space-between">
+                        <Text color="neutral-textLow">Subtotal Neto</Text>
+                        <Text fontWeight="medium">
+                          ${totales.subtotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                        </Text>
+                      </Box>
+                      <Box display="flex" justifyContent="space-between">
+                        <Text color="neutral-textLow">IVA</Text>
+                        <Text fontWeight="medium">
+                          ${totales.iva.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                        </Text>
+                      </Box>
+                      <Box
+                        borderTopWidth="1"
+                        borderColor="neutral-surfaceHighlight"
+                        borderStyle="solid"
+                        paddingTop="3"
+                      />
+                    </>
+                  )}
+                  <Box display="flex" justifyContent="space-between">
+                    <Text fontWeight="bold" fontSize="highlight">Total</Text>
+                    <Text fontWeight="bold" fontSize="highlight" color="primary-interactive">
+                      ${totales.total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                    </Text>
+                  </Box>
+                </Box>
 
-              <div className="space-y-3">
-                {discriminaIva && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Subtotal Neto</span>
-                      <span className="font-medium">
-                        ${totales.subtotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">IVA</span>
-                      <span className="font-medium">
-                        ${totales.iva.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <hr />
-                  </>
-                )}
-                <div className="flex justify-between text-lg">
-                  <span className="font-semibold">Total</span>
-                  <span className="font-bold text-primary-600">
-                    ${totales.total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              </div>
+                <Box marginTop="6">
+                  <Button
+                    type="submit"
+                    appearance="primary"
+                    disabled={mutation.isPending}
+                  >
+                    {mutation.isPending ? 'Emitiendo...' : 'Emitir Factura'}
+                  </Button>
+                </Box>
 
-              <button
-                type="submit"
-                className="btn-primary w-full mt-6"
-                disabled={mutation.isPending}
-              >
-                {mutation.isPending ? 'Emitiendo...' : 'Emitir Factura'}
-              </button>
-
-              <p className="text-xs text-gray-500 text-center mt-4">
-                La factura se enviará a ARCA para obtener el CAE
-              </p>
-            </div>
-          </div>
-        </div>
+                <Box marginTop="4">
+                  <Text fontSize="caption" color="neutral-textLow" textAlign="center">
+                    La factura se enviará a ARCA para obtener el CAE
+                  </Text>
+                </Box>
+              </Card.Body>
+            </Card>
+          </Box>
+        </Box>
       </form>
-    </div>
+    </Box>
   )
 }

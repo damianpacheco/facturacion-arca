@@ -1,70 +1,80 @@
 import { Link, useLocation } from 'react-router-dom'
+import { Text, Box } from '@nimbus-ds/components'
 import {
-  LayoutDashboard,
-  FileText,
-  Users,
-  Settings,
-  PlusCircle,
-} from 'lucide-react'
+  HomeIcon,
+  FileIcon,
+  PlusCircleIcon,
+  UserIcon,
+  CogIcon,
+} from '@nimbus-ds/icons'
 
 interface LayoutProps {
   children: React.ReactNode
 }
 
 const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/facturas', icon: FileText, label: 'Facturas' },
-  { path: '/facturas/nueva', icon: PlusCircle, label: 'Nueva Factura' },
-  { path: '/clientes', icon: Users, label: 'Clientes' },
-  { path: '/configuracion', icon: Settings, label: 'Configuración' },
+  { path: '/', icon: HomeIcon, label: 'Dashboard' },
+  { path: '/facturas', icon: FileIcon, label: 'Facturas' },
+  { path: '/facturas/nueva', icon: PlusCircleIcon, label: 'Nueva Factura' },
+  { path: '/clientes', icon: UserIcon, label: 'Clientes' },
+  { path: '/configuracion', icon: CogIcon, label: 'Configuración' },
 ]
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
 
   return (
-    <div className="min-h-screen flex">
+    <div className="app-layout">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-6">
-          <h1 className="text-xl font-bold">Facturación ARCA</h1>
-          <p className="text-gray-400 text-sm mt-1">Sistema de emisión</p>
-        </div>
+      <aside className="app-sidebar">
+        <Box padding="4" marginBottom="4">
+          <Text color="neutral-background" fontSize="highlight" fontWeight="bold">
+            Facturación ARCA
+          </Text>
+          <Text color="neutral-textDisabled" fontSize="caption">
+            Sistema de emisión
+          </Text>
+        </Box>
 
-        <nav className="flex-1 px-4">
-          <ul className="space-y-2">
+        <nav>
+          <Box as="ul" display="flex" flexDirection="column" gap="1">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path
               const Icon = item.icon
 
               return (
-                <li key={item.path}>
+                <li key={item.path} style={{ listStyle: 'none' }}>
                   <Link
                     to={item.path}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      isActive
-                        ? 'bg-primary-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-800'
-                    }`}
+                    className={`nav-link ${isActive ? 'active' : ''}`}
                   >
-                    <Icon size={20} />
+                    <Icon size="medium" />
                     <span>{item.label}</span>
                   </Link>
                 </li>
               )
             })}
-          </ul>
+          </Box>
         </nav>
 
-        <div className="p-4 border-t border-gray-800">
-          <p className="text-gray-400 text-xs text-center">
+        <Box
+          position="absolute"
+          bottom="0"
+          left="0"
+          right="0"
+          padding="4"
+          borderColor="neutral-surfaceHighlight"
+          borderStyle="solid"
+          borderTopWidth="1"
+        >
+          <Text color="neutral-textDisabled" fontSize="caption" textAlign="center">
             Modo Testing
-          </p>
-        </div>
+          </Text>
+        </Box>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-8 overflow-auto">
+      <main className="app-main">
         {children}
       </main>
     </div>

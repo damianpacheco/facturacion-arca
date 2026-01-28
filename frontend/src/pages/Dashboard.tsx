@@ -1,12 +1,22 @@
 import { useQuery } from '@tanstack/react-query'
-import { FileText, Users, DollarSign, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import {
+  Title,
+  Text,
+  Card,
+  Box,
+  Alert,
+  Table,
+  Tag,
+  Spinner,
+} from '@nimbus-ds/components'
+import { FileIcon, UserIcon, MoneyIcon, PlusCircleIcon } from '@nimbus-ds/icons'
 import { getFacturas, getClientes, getEstadoARCA } from '../services/api'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export default function Dashboard() {
-  const { data: facturas } = useQuery({
+  const { data: facturas, isLoading: loadingFacturas } = useQuery({
     queryKey: ['facturas', { limit: 5 }],
     queryFn: () => getFacturas({ limit: 5 }),
   })
@@ -27,158 +37,232 @@ export default function Dashboard() {
     .reduce((sum, f) => sum + Number(f.total), 0) || 0
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+    <Box display="flex" flexDirection="column" gap="6">
+      <Title as="h1">Dashboard</Title>
 
       {/* Estado ARCA */}
-      <div className={`mb-6 p-4 rounded-lg ${
-        estadoArca?.estado === 'conectado' 
-          ? 'bg-green-50 border border-green-200' 
-          : 'bg-yellow-50 border border-yellow-200'
-      }`}>
-        <div className="flex items-center gap-2">
-          {estadoArca?.estado === 'conectado' ? (
-            <>
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-green-700 font-medium">
-                Conectado a ARCA ({estadoArca.modo})
-              </span>
-            </>
-          ) : (
-            <>
-              <AlertCircle className="text-yellow-600" size={20} />
-              <span className="text-yellow-700 font-medium">
-                {estadoArca?.mensaje || 'Verificando conexión con ARCA...'}
-              </span>
-            </>
-          )}
-        </div>
-      </div>
+      <Alert
+        appearance={estadoArca?.estado === 'conectado' ? 'success' : 'warning'}
+        title={
+          estadoArca?.estado === 'conectado'
+            ? `Conectado a ARCA (${estadoArca.modo})`
+            : estadoArca?.mensaje || 'Verificando conexión con ARCA...'
+        }
+      >
+        {estadoArca?.estado === 'conectado' 
+          ? 'Sistema listo para emitir facturas'
+          : 'Por favor verifique la configuración'
+        }
+      </Alert>
 
       {/* Tarjetas de estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="card">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <FileText className="text-blue-600" size={24} />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm">Facturas Emitidas</p>
-              <p className="text-2xl font-bold">{facturas?.total || 0}</p>
-            </div>
-          </div>
-        </div>
+      <Box display="flex" gap="4" flexWrap="wrap">
+        <Box flex="1" minWidth="200px">
+          <Card>
+            <Card.Body>
+              <Box display="flex" alignItems="center" gap="4">
+                <Box
+                  padding="3"
+                  backgroundColor="primary-surface"
+                  borderRadius="2"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <FileIcon size="medium" />
+                </Box>
+                <Box>
+                  <Text fontSize="caption" color="neutral-textLow">
+                    Facturas Emitidas
+                  </Text>
+                  <Title as="h2">{facturas?.total || 0}</Title>
+                </Box>
+              </Box>
+            </Card.Body>
+          </Card>
+        </Box>
 
-        <div className="card">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <DollarSign className="text-green-600" size={24} />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm">Total Facturado</p>
-              <p className="text-2xl font-bold">
-                ${totalMes.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-          </div>
-        </div>
+        <Box flex="1" minWidth="200px">
+          <Card>
+            <Card.Body>
+              <Box display="flex" alignItems="center" gap="4">
+                <Box
+                  padding="3"
+                  backgroundColor="success-surface"
+                  borderRadius="2"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <MoneyIcon size="medium" />
+                </Box>
+                <Box>
+                  <Text fontSize="caption" color="neutral-textLow">
+                    Total Facturado
+                  </Text>
+                  <Title as="h2">
+                    ${totalMes.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                  </Title>
+                </Box>
+              </Box>
+            </Card.Body>
+          </Card>
+        </Box>
 
-        <div className="card">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Users className="text-purple-600" size={24} />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm">Clientes</p>
-              <p className="text-2xl font-bold">{clientes?.total || 0}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+        <Box flex="1" minWidth="200px">
+          <Card>
+            <Card.Body>
+              <Box display="flex" alignItems="center" gap="4">
+                <Box
+                  padding="3"
+                  backgroundColor="primary-surface"
+                  borderRadius="2"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <UserIcon size="medium" />
+                </Box>
+                <Box>
+                  <Text fontSize="caption" color="neutral-textLow">
+                    Clientes
+                  </Text>
+                  <Title as="h2">{clientes?.total || 0}</Title>
+                </Box>
+              </Box>
+            </Card.Body>
+          </Card>
+        </Box>
+      </Box>
 
       {/* Acciones rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <Link
-          to="/facturas/nueva"
-          className="card hover:shadow-md transition-shadow flex items-center gap-4"
-        >
-          <div className="p-4 bg-primary-100 rounded-lg">
-            <FileText className="text-primary-600" size={32} />
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg">Nueva Factura</h3>
-            <p className="text-gray-500">Emitir un nuevo comprobante</p>
-          </div>
-        </Link>
+      <Box display="flex" gap="4" flexWrap="wrap">
+        <Box flex="1" minWidth="250px">
+          <Link to="/facturas/nueva" style={{ textDecoration: 'none' }}>
+            <Card>
+              <Card.Body>
+                <Box display="flex" alignItems="center" gap="4">
+                  <Box
+                    padding="4"
+                    backgroundColor="primary-surface"
+                    borderRadius="2"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <PlusCircleIcon size="large" />
+                  </Box>
+                  <Box>
+                    <Text fontWeight="bold" fontSize="base">
+                      Nueva Factura
+                    </Text>
+                    <Text color="neutral-textLow" fontSize="caption">
+                      Emitir un nuevo comprobante
+                    </Text>
+                  </Box>
+                </Box>
+              </Card.Body>
+            </Card>
+          </Link>
+        </Box>
 
-        <Link
-          to="/clientes"
-          className="card hover:shadow-md transition-shadow flex items-center gap-4"
-        >
-          <div className="p-4 bg-purple-100 rounded-lg">
-            <Users className="text-purple-600" size={32} />
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg">Gestionar Clientes</h3>
-            <p className="text-gray-500">Agregar o editar clientes</p>
-          </div>
-        </Link>
-      </div>
+        <Box flex="1" minWidth="250px">
+          <Link to="/clientes" style={{ textDecoration: 'none' }}>
+            <Card>
+              <Card.Body>
+                <Box display="flex" alignItems="center" gap="4">
+                  <Box
+                    padding="4"
+                    backgroundColor="primary-surface"
+                    borderRadius="2"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <UserIcon size="large" />
+                  </Box>
+                  <Box>
+                    <Text fontWeight="bold" fontSize="base">
+                      Gestionar Clientes
+                    </Text>
+                    <Text color="neutral-textLow" fontSize="caption">
+                      Agregar o editar clientes
+                    </Text>
+                  </Box>
+                </Box>
+              </Card.Body>
+            </Card>
+          </Link>
+        </Box>
+      </Box>
 
       {/* Últimas facturas */}
-      <div className="card">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Últimas Facturas</h2>
-          <Link to="/facturas" className="text-primary-600 hover:underline text-sm">
-            Ver todas
-          </Link>
-        </div>
-
-        {facturas?.items.length ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="table-header">Número</th>
-                  <th className="table-header">Fecha</th>
-                  <th className="table-header">Total</th>
-                  <th className="table-header">Estado</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
+      <Card>
+        <Card.Header>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Title as="h3">Últimas Facturas</Title>
+            <Link to="/facturas" style={{ textDecoration: 'none' }}>
+              <Text color="primary-interactive" fontSize="caption">
+                Ver todas
+              </Text>
+            </Link>
+          </Box>
+        </Card.Header>
+        <Card.Body>
+          {loadingFacturas ? (
+            <Box display="flex" justifyContent="center" padding="8">
+              <Spinner size="large" />
+            </Box>
+          ) : facturas?.items.length ? (
+            <Table>
+              <Table.Head>
+                <Table.Row>
+                  <Table.Cell as="th">Número</Table.Cell>
+                  <Table.Cell as="th">Fecha</Table.Cell>
+                  <Table.Cell as="th">Total</Table.Cell>
+                  <Table.Cell as="th">Estado</Table.Cell>
+                </Table.Row>
+              </Table.Head>
+              <Table.Body>
                 {facturas.items.map((factura) => (
-                  <tr key={factura.id} className="hover:bg-gray-50">
-                    <td className="table-cell font-medium">
-                      {factura.numero_completo}
-                    </td>
-                    <td className="table-cell">
-                      {format(new Date(factura.fecha), 'dd/MM/yyyy', { locale: es })}
-                    </td>
-                    <td className="table-cell">
-                      ${Number(factura.total).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="table-cell">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        factura.estado === 'autorizada'
-                          ? 'bg-green-100 text-green-800'
-                          : factura.estado === 'rechazada'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                  <Table.Row key={factura.id}>
+                    <Table.Cell>
+                      <Text fontWeight="medium">{factura.numero_completo}</Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text>
+                        {format(new Date(factura.fecha), 'dd/MM/yyyy', { locale: es })}
+                      </Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text>
+                        ${Number(factura.total).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      </Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Tag
+                        appearance={
+                          factura.estado === 'autorizada'
+                            ? 'success'
+                            : factura.estado === 'rechazada'
+                            ? 'danger'
+                            : 'warning'
+                        }
+                      >
                         {factura.estado}
-                      </span>
-                    </td>
-                  </tr>
+                      </Tag>
+                    </Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">
-            No hay facturas emitidas aún
-          </p>
-        )}
-      </div>
-    </div>
+              </Table.Body>
+            </Table>
+          ) : (
+            <Box padding="8" display="flex" justifyContent="center">
+              <Text color="neutral-textLow">No hay facturas emitidas aún</Text>
+            </Box>
+          )}
+        </Card.Body>
+      </Card>
+    </Box>
   )
 }

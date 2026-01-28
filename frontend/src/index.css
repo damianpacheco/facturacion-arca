@@ -1,45 +1,58 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "@nimbus-ds/styles/dist/index.css";
 
+/* Estilos globales */
 body {
-  @apply bg-gray-50 text-gray-900;
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f5f5f5;
 }
 
-@layer components {
-  .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
-  }
+/* Reset básico */
+* {
+  box-sizing: border-box;
+}
 
-  .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
-  }
+/* Sidebar layout */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
 
-  .btn-secondary {
-    @apply btn bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-500;
-  }
+.app-sidebar {
+  width: 240px;
+  background-color: #1a1a2e;
+  color: white;
+  padding: 1rem;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+}
 
-  .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
-  }
+.app-main {
+  margin-left: 240px;
+  flex: 1;
+  padding: 2rem;
+  min-height: 100vh;
+}
 
-  .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
-  }
+/* Links de navegación */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: all 0.2s;
+}
 
-  .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
-  }
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
 
-  .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
-  }
-
-  .table-header {
-    @apply px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
-  }
-
-  .table-cell {
-    @apply px-4 py-3 whitespace-nowrap text-sm text-gray-900;
-  }
+.nav-link.active {
+  background-color: #3b82f6;
+  color: white;
 }
