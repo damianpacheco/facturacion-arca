@@ -39,6 +39,9 @@ class Settings(BaseSettings):
 
     # Frontend URL (para redirecciones después de OAuth)
     frontend_url: str = "http://localhost:5173"
+    
+    # Backend URL (para URLs públicas como PDF de facturas)
+    backend_url: str = "http://localhost:8000"
 
     class Config:
         env_file = ".env"

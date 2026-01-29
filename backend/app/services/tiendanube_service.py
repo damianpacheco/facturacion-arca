@@ -143,6 +143,141 @@ class TiendaNubeService:
         response = await self.client.delete(url, headers=self._get_headers())
         response.raise_for_status()
 
+    # =====================
+    # Metafields para Órdenes
+    # =====================
+
+    async def create_order_metafield(
+        self,
+        order_id: str,
+        namespace: str,
+        key: str,
+        value: str,
+        description: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Crea un metafield asociado a una orden.
+        
+        Args:
+            order_id: ID de la orden
+            namespace: Namespace del metafield (ej: "facturacion")
+            key: Clave del metafield (ej: "factura_numero")
+            value: Valor del metafield
+            description: Descripción opcional
+        """
+        url = f"{TN_API_BASE}/{self.store_id}/metafields"
+        data = {
+            "namespace": namespace,
+            "key": key,
+            "value": value,
+            "owner_resource": "Order",
+            "owner_id": order_id,
+        }
+        if description:
+            data["description"] = description
+
+        response = await self.client.post(url, headers=self._get_headers(), json=data)
+        response.raise_for_status()
+        return response.json()
+
+    async def get_order_metafields(
+        self,
+        order_id: str,
+        namespace: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Obtiene los metafields de una orden.
+        
+        Args:
+            order_id: ID de la orden
+            namespace: Filtrar por namespace (opcional)
+        """
+        url = f"{TN_API_BASE}/{self.store_id}/metafields/orders"
+        params: Dict[str, Any] = {"owner_id": order_id}
+        if namespace:
+            params["namespace"] = namespace
+
+        response = await self.client.get(url, headers=self._get_headers(), params=params)
+        response.raise_for_status()
+        return response.json()
+
+    async def update_metafield(
+        self,
+        metafield_id: int,
+        value: str,
+        description: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Actualiza un metafield existente."""
+        url = f"{TN_API_BASE}/{self.store_id}/metafields/{metafield_id}"
+        data: Dict[str, Any] = {"value": value}
+        if description:
+            data["description"] = description
+
+        response = await self.client.put(url, headers=self._get_headers(), json=data)
+        response.raise_for_status()
+        return response.json()
+
+    async def delete_metafield(self, metafield_id: int) -> None:
+        """Elimina un metafield."""
+        url = f"{TN_API_BASE}/{self.store_id}/metafields/{metafield_id}"
+        response = await self.client.delete(url, headers=self._get_headers())
+        response.raise_for_status()
+
+    async def save_invoice_to_order_metafields(
+        self,
+        order_id: str,
+        factura_numero: str,
+        factura_cae: str,
+        factura_vencimiento_cae: str,
+        factura_pdf_url: str,
+        factura_fecha: str,
+    ) -> List[Dict[str, Any]]:
+        """
+        Guarda los datos de una factura en los metafields de una orden.
+        
+        Crea o actualiza los siguientes metafields:
+        - facturacion/numero: Número completo de la factura
+        - facturacion/cae: CAE de ARCA
+        - facturacion/vencimiento_cae: Fecha de vencimiento del CAE
+        - facturacion/pdf_url: URL para descargar el PDF
+        - facturacion/fecha: Fecha de emisión
+        """
+        namespace = "facturacion"
+        results = []
+
+        metafields_data = [
+            ("numero", factura_numero, "Número de factura emitida"),
+            ("cae", factura_cae, "CAE de ARCA"),
+            ("vencimiento_cae", factura_vencimiento_cae, "Fecha de vencimiento del CAE"),
+            ("pdf_url", factura_pdf_url, "URL para descargar el PDF de la factura"),
+            ("fecha", factura_fecha, "Fecha de emisión de la factura"),
+        ]
+
+        for key, value, description in metafields_data:
+            try:
+                result = await self.create_order_metafield(
+                    order_id=order_id,
+                    namespace=namespace,
+                    key=key,
+                    value=value,
+                    description=description,
+                )
+                results.append(result)
+            except httpx.HTTPStatusError as e:
+                # Si el metafield ya existe, intentar actualizarlo
+                if e.response.status_code == 422:
+                    # Buscar el metafield existente
+                    existing = await self.get_order_metafields(order_id, namespace)
+                    for mf in existing:
+                        if mf.get("key") == key:
+                            result = await self.update_metafield(mf["id"], value)
+                            results.append(result)
+                            break
+                else:
+                    print(f"Error creando metafield {key}: {e}")
+
+        return results
+
 
 def map_order_to_invoice_data(order: Dict[str, Any]) -> Dict[str, Any]:
     """Mapea una orden de TiendaNube a datos de factura."""

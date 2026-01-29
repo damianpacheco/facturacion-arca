@@ -400,6 +400,30 @@ async def invoice_order(
 
         await db.commit()
 
+        # Guardar datos de factura en metafields de TiendaNube
+        try:
+            # Crear nuevo servicio para guardar metafields
+            metafield_service = TiendaNubeService(
+                access_token=store.access_token,
+                store_id=store.store_id
+            )
+            
+            # Construir URL del PDF (usa backend_url para acceso público)
+            pdf_url = f"{settings.backend_url}/api/facturas/{factura.id}/pdf"
+            
+            await metafield_service.save_invoice_to_order_metafields(
+                order_id=order_id,
+                factura_numero=factura.numero_completo,
+                factura_cae=resultado_arca["cae"],
+                factura_vencimiento_cae=resultado_arca["vencimiento_cae"],
+                factura_pdf_url=pdf_url,
+                factura_fecha=factura.fecha.isoformat(),
+            )
+            await metafield_service.close()
+        except Exception as metafield_error:
+            # No fallar si los metafields no se pueden guardar
+            print(f"Advertencia: No se pudieron guardar metafields en TiendaNube: {metafield_error}")
+
         return InvoiceOrderResponse(
             success=True,
             factura_id=factura.id,
