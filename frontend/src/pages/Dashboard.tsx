@@ -9,8 +9,15 @@ import {
   Table,
   Tag,
   Spinner,
+  Button,
 } from '@nimbus-ds/components'
-import { FileIcon, UserIcon, MoneyIcon, PlusCircleIcon } from '@nimbus-ds/icons'
+import {
+  FileIcon,
+  UserIcon,
+  MoneyIcon,
+  PlusCircleIcon,
+  ExternalLinkIcon,
+} from '@nimbus-ds/icons'
 import { getFacturas, getClientes, getEstadoARCA } from '../services/api'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -38,7 +45,15 @@ export default function Dashboard() {
 
   return (
     <Box display="flex" flexDirection="column" gap="6">
-      <Title as="h1">Dashboard</Title>
+      {/* Header */}
+      <Box>
+        <Title as="h1">Dashboard</Title>
+        <Box marginTop="1">
+          <Text color="neutral-textLow">
+            Bienvenido al sistema de facturación electrónica
+          </Text>
+        </Box>
+      </Box>
 
       {/* Estado ARCA */}
       <Alert
@@ -57,17 +72,13 @@ export default function Dashboard() {
 
       {/* Tarjetas de estadísticas */}
       <Box display="flex" gap="4" flexWrap="wrap">
-        <Box flex="1" minWidth="200px">
+        <Box flex="1" minWidth="220px">
           <Card>
             <Card.Body>
               <Box display="flex" alignItems="center" gap="4">
                 <Box
-                  padding="3"
+                  className="stat-card-icon"
                   backgroundColor="primary-surface"
-                  borderRadius="2"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
                 >
                   <FileIcon size="medium" />
                 </Box>
@@ -75,24 +86,24 @@ export default function Dashboard() {
                   <Text fontSize="caption" color="neutral-textLow">
                     Facturas Emitidas
                   </Text>
-                  <Title as="h2">{facturas?.total || 0}</Title>
+                  <Box marginTop="1">
+                    <Text fontSize="highlight" fontWeight="bold">
+                      {facturas?.total || 0}
+                    </Text>
+                  </Box>
                 </Box>
               </Box>
             </Card.Body>
           </Card>
         </Box>
 
-        <Box flex="1" minWidth="200px">
+        <Box flex="1" minWidth="220px">
           <Card>
             <Card.Body>
               <Box display="flex" alignItems="center" gap="4">
                 <Box
-                  padding="3"
+                  className="stat-card-icon"
                   backgroundColor="success-surface"
-                  borderRadius="2"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
                 >
                   <MoneyIcon size="medium" />
                 </Box>
@@ -100,34 +111,36 @@ export default function Dashboard() {
                   <Text fontSize="caption" color="neutral-textLow">
                     Total Facturado
                   </Text>
-                  <Title as="h2">
-                    ${totalMes.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                  </Title>
+                  <Box marginTop="1">
+                    <Text fontSize="highlight" fontWeight="bold">
+                      ${totalMes.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                    </Text>
+                  </Box>
                 </Box>
               </Box>
             </Card.Body>
           </Card>
         </Box>
 
-        <Box flex="1" minWidth="200px">
+        <Box flex="1" minWidth="220px">
           <Card>
             <Card.Body>
               <Box display="flex" alignItems="center" gap="4">
                 <Box
-                  padding="3"
+                  className="stat-card-icon"
                   backgroundColor="primary-surface"
-                  borderRadius="2"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
                 >
                   <UserIcon size="medium" />
                 </Box>
                 <Box>
                   <Text fontSize="caption" color="neutral-textLow">
-                    Clientes
+                    Clientes Registrados
                   </Text>
-                  <Title as="h2">{clientes?.total || 0}</Title>
+                  <Box marginTop="1">
+                    <Text fontSize="highlight" fontWeight="bold">
+                      {clientes?.total || 0}
+                    </Text>
+                  </Box>
                 </Box>
               </Box>
             </Card.Body>
@@ -137,22 +150,18 @@ export default function Dashboard() {
 
       {/* Acciones rápidas */}
       <Box display="flex" gap="4" flexWrap="wrap">
-        <Box flex="1" minWidth="250px">
+        <Box flex="1" minWidth="280px">
           <Link to="/facturas/nueva" style={{ textDecoration: 'none' }}>
             <Card>
               <Card.Body>
-                <Box display="flex" alignItems="center" gap="4">
+                <Box display="flex" alignItems="center" gap="4" className="action-card">
                   <Box
-                    padding="4"
+                    className="stat-card-icon action-card-icon"
                     backgroundColor="primary-surface"
-                    borderRadius="2"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
                   >
                     <PlusCircleIcon size="large" />
                   </Box>
-                  <Box>
+                  <Box flex="1">
                     <Text fontWeight="bold" fontSize="base">
                       Nueva Factura
                     </Text>
@@ -160,28 +169,25 @@ export default function Dashboard() {
                       Emitir un nuevo comprobante
                     </Text>
                   </Box>
+                  <ExternalLinkIcon size="small" />
                 </Box>
               </Card.Body>
             </Card>
           </Link>
         </Box>
 
-        <Box flex="1" minWidth="250px">
+        <Box flex="1" minWidth="280px">
           <Link to="/clientes" style={{ textDecoration: 'none' }}>
             <Card>
               <Card.Body>
-                <Box display="flex" alignItems="center" gap="4">
+                <Box display="flex" alignItems="center" gap="4" className="action-card">
                   <Box
-                    padding="4"
+                    className="stat-card-icon action-card-icon"
                     backgroundColor="primary-surface"
-                    borderRadius="2"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
                   >
                     <UserIcon size="large" />
                   </Box>
-                  <Box>
+                  <Box flex="1">
                     <Text fontWeight="bold" fontSize="base">
                       Gestionar Clientes
                     </Text>
@@ -189,6 +195,7 @@ export default function Dashboard() {
                       Agregar o editar clientes
                     </Text>
                   </Box>
+                  <ExternalLinkIcon size="small" />
                 </Box>
               </Card.Body>
             </Card>
@@ -201,14 +208,14 @@ export default function Dashboard() {
         <Card.Header>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Title as="h3">Últimas Facturas</Title>
-            <Link to="/facturas" style={{ textDecoration: 'none' }}>
-              <Text color="primary-interactive" fontSize="caption">
+            <Link to="/facturas">
+              <Button appearance="neutral">
                 Ver todas
-              </Text>
+              </Button>
             </Link>
           </Box>
         </Card.Header>
-        <Card.Body>
+        <Card.Body padding="none">
           {loadingFacturas ? (
             <Box display="flex" justifyContent="center" padding="8">
               <Spinner size="large" />
@@ -230,12 +237,12 @@ export default function Dashboard() {
                       <Text fontWeight="medium">{factura.numero_completo}</Text>
                     </Table.Cell>
                     <Table.Cell>
-                      <Text>
+                      <Text color="neutral-textLow">
                         {format(new Date(factura.fecha), 'dd/MM/yyyy', { locale: es })}
                       </Text>
                     </Table.Cell>
                     <Table.Cell>
-                      <Text>
+                      <Text fontWeight="medium">
                         ${Number(factura.total).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                       </Text>
                     </Table.Cell>
@@ -257,8 +264,17 @@ export default function Dashboard() {
               </Table.Body>
             </Table>
           ) : (
-            <Box padding="8" display="flex" justifyContent="center">
+            <Box className="empty-state">
+              <FileIcon size="large" className="empty-state-icon" />
               <Text color="neutral-textLow">No hay facturas emitidas aún</Text>
+              <Box marginTop="4">
+                <Link to="/facturas/nueva">
+                  <Button appearance="primary">
+                    <PlusCircleIcon size="small" />
+                    Crear primera factura
+                  </Button>
+                </Link>
+              </Box>
             </Box>
           )}
         </Card.Body>

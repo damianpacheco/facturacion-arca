@@ -196,18 +196,35 @@ export default function OrdenesTiendaNube() {
   // Si no hay tienda conectada
   if (!storeStatus?.connected) {
     return (
-      <Box>
-        <Title as="h1">Órdenes de TiendaNube</Title>
+      <Box display="flex" flexDirection="column" gap="6">
+        <Box>
+          <Title as="h1">Órdenes de TiendaNube</Title>
+          <Box marginTop="1">
+            <Text color="neutral-textLow">
+              Conecta tu tienda para facturar órdenes
+            </Text>
+          </Box>
+        </Box>
 
-        <Box marginTop="6">
-          <Card>
-            <Card.Body>
-              <Box display="flex" flexDirection="column" alignItems="center" gap="4" padding="8">
+        <Card>
+          <Card.Body>
+            <Box className="empty-state">
+              <Box
+                className="stat-card-icon"
+                backgroundColor="primary-surface"
+                marginBottom="4"
+              >
                 <StoreIcon size="large" />
-                <Title as="h3">Conecta tu tienda de TiendaNube</Title>
-                <Text textAlign="center">
-                  Para ver y facturar órdenes, primero necesitas conectar tu tienda de TiendaNube.
+              </Box>
+              <Text fontWeight="bold" fontSize="base">
+                Conecta tu tienda de TiendaNube
+              </Text>
+              <Box marginTop="1">
+                <Text color="neutral-textLow" fontSize="caption" textAlign="center">
+                  Sincroniza tus órdenes y emití facturas automáticamente
                 </Text>
+              </Box>
+              <Box marginTop="4">
                 <Button
                   as="a"
                   href={getTiendaNubeInstallUrl()}
@@ -216,25 +233,31 @@ export default function OrdenesTiendaNube() {
                   Conectar TiendaNube
                 </Button>
               </Box>
-            </Card.Body>
-          </Card>
-        </Box>
+            </Box>
+          </Card.Body>
+        </Card>
       </Box>
     )
   }
 
   return (
-    <Box>
+    <Box display="flex" flexDirection="column" gap="6">
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box>
           <Title as="h1">Órdenes de TiendaNube</Title>
-          <Box marginTop="1">
-            <Text color="neutral-textLow">
-              {storeStatus.store_name} - {storeStatus.store_url}
+          <Box marginTop="1" display="flex" alignItems="center" gap="2">
+            <Box
+              width="8px"
+              height="8px"
+              borderRadius="full"
+              backgroundColor="success-interactive"
+            />
+            <Text color="neutral-textLow" fontSize="caption">
+              {storeStatus.store_name}
             </Text>
           </Box>
         </Box>
-        <Button onClick={() => refetchOrders()}>
+        <Button appearance="neutral" onClick={() => refetchOrders()}>
           <RedoIcon size="small" />
           Actualizar
         </Button>
@@ -300,9 +323,14 @@ export default function OrdenesTiendaNube() {
                 </Alert>
               </Box>
             ) : ordersData?.items.length === 0 ? (
-              <Box display="flex" flexDirection="column" alignItems="center" padding="8" gap="2">
-                <SearchIcon size="large" />
-                <Text>No se encontraron órdenes con los filtros seleccionados</Text>
+              <Box className="empty-state">
+                <SearchIcon size="large" className="empty-state-icon" />
+                <Box marginTop="2">
+                  <Text fontWeight="medium">No se encontraron órdenes</Text>
+                </Box>
+                <Text color="neutral-textLow" fontSize="caption">
+                  Probá ajustando los filtros o esperá nuevas ventas
+                </Text>
               </Box>
             ) : (
               <Table>

@@ -121,7 +121,14 @@ export default function Clientes() {
   return (
     <Box display="flex" flexDirection="column" gap="6">
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Title as="h1">Clientes</Title>
+        <Box>
+          <Title as="h1">Clientes</Title>
+          <Box marginTop="1">
+            <Text color="neutral-textLow">
+              Administra tu cartera de clientes
+            </Text>
+          </Box>
+        </Box>
         <Button appearance="primary" onClick={() => openModal()}>
           <PlusCircleIcon size="small" />
           Nuevo Cliente
@@ -228,12 +235,20 @@ export default function Clientes() {
               </Box>
             </>
           ) : (
-            <Box padding="8" display="flex" flexDirection="column" alignItems="center" gap="4">
-              <UserIcon size="large" />
-              <Text color="neutral-textLow">No hay clientes</Text>
-              <Button appearance="primary" onClick={() => openModal()}>
-                Agregar primer cliente
-              </Button>
+            <Box className="empty-state">
+              <UserIcon size="large" className="empty-state-icon" />
+              <Box marginTop="2">
+                <Text fontWeight="medium">No hay clientes</Text>
+              </Box>
+              <Text color="neutral-textLow" fontSize="caption">
+                Agrega clientes para facturar más rápido
+              </Text>
+              <Box marginTop="4">
+                <Button appearance="primary" onClick={() => openModal()}>
+                  <PlusCircleIcon size="small" />
+                  Agregar primer cliente
+                </Button>
+              </Box>
             </Box>
           )}
         </Card.Body>
