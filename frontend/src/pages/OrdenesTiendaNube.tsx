@@ -451,7 +451,14 @@ export default function OrdenesTiendaNube() {
                       </Text>
                     </td>
                     <td>
-                      {order.customer_name ? (
+                      {order.customer_override_cuit ? (
+                        <Box>
+                          <span className="tn-link">{order.customer_override_name || order.customer_name}</span>
+                          <Text fontSize="caption" color="primary-interactive">
+                            CUIT: {order.customer_override_cuit}
+                          </Text>
+                        </Box>
+                      ) : order.customer_name ? (
                         <span className="tn-link">{order.customer_name}</span>
                       ) : (
                         <Text color="neutral-textLow">No Informado</Text>
@@ -731,7 +738,9 @@ export default function OrdenesTiendaNube() {
                   <Box>
                     <Text fontSize="caption" color="neutral-textLow">Cliente</Text>
                     <Text fontWeight="medium">{selectedFactura.cliente.razon_social}</Text>
-                    <Text fontSize="caption">CUIT: {selectedFactura.cliente.cuit}</Text>
+                    <Text fontSize="caption">
+                      CUIT: {selectedFactura.cliente.cuit} · {selectedFactura.cliente.condicion_iva || 'Consumidor Final'}
+                    </Text>
                   </Box>
                 </>
               )}
