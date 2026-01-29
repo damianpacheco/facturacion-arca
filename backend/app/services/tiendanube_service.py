@@ -285,11 +285,7 @@ class TiendaNubeService:
     async def get_order_custom_fields(self) -> List[Dict[str, Any]]:
         """Obtiene todos los custom fields de órdenes de la tienda."""
         url = f"{TN_API_BASE}/{self.store_id}/orders/custom-fields"
-        print(f"TiendaNube: GET {url}")
         response = await self.client.get(url, headers=self._get_headers())
-        print(f"TiendaNube: Response status {response.status_code}")
-        if response.status_code != 200:
-            print(f"TiendaNube: Response body: {response.text}")
         response.raise_for_status()
         return response.json()
 
@@ -321,12 +317,7 @@ class TiendaNubeService:
         if description:
             data["description"] = description
 
-        print(f"TiendaNube: POST {url}")
-        print(f"TiendaNube: Data: {data}")
         response = await self.client.post(url, headers=self._get_headers(), json=data)
-        print(f"TiendaNube: Response status {response.status_code}")
-        if response.status_code not in [200, 201]:
-            print(f"TiendaNube: Response body: {response.text}")
         response.raise_for_status()
         return response.json()
 
@@ -343,12 +334,7 @@ class TiendaNubeService:
             field_values: Lista de {id: custom_field_id, value: valor}
         """
         url = f"{TN_API_BASE}/{self.store_id}/orders/{order_id}/custom-fields/values"
-        print(f"TiendaNube: PUT {url}")
-        print(f"TiendaNube: Values: {field_values}")
         response = await self.client.put(url, headers=self._get_headers(), json=field_values)
-        print(f"TiendaNube: Response status {response.status_code}")
-        if response.status_code not in [200, 204]:
-            print(f"TiendaNube: Response body: {response.text}")
         response.raise_for_status()
 
     async def ensure_invoice_custom_fields_exist(self) -> Dict[str, str]:
