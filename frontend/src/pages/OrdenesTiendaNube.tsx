@@ -17,8 +17,6 @@ import {
   Label,
   IconButton,
   useToast,
-  Input,
-  Toggle,
 } from '@nimbus-ds/components'
 import {
   CheckCircleIcon,
@@ -51,10 +49,6 @@ interface TiendaNubeOrder {
   invoiced: boolean
   factura_id: number | null
   factura_numero: string | null
-  // Datos del cliente modificados/guardados
-  customer_override_name: string | null
-  customer_override_cuit: string | null
-  customer_override_condicion_iva: string | null
 }
 
 interface OrderListResponse {
@@ -102,12 +96,6 @@ export default function OrdenesTiendaNube() {
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<TiendaNubeOrder | null>(null)
   const [selectedTipoComprobante, setSelectedTipoComprobante] = useState('6')
-  
-  // Datos editables del cliente
-  const [editClienteEnabled, setEditClienteEnabled] = useState(false)
-  const [clienteNombre, setClienteNombre] = useState('')
-  const [clienteCuit, setClienteCuit] = useState('')
-  const [clienteCondicionIva, setClienteCondicionIva] = useState('Consumidor Final')
 
   // Modal de ver factura
   const [viewFacturaModalOpen, setViewFacturaModalOpen] = useState(false)
@@ -144,46 +132,14 @@ export default function OrdenesTiendaNube() {
     refetchIntervalInBackground: false, // Solo cuando la pestaña está activa
   })
 
-  // Mutación para guardar datos del cliente
-  const saveClienteMutation = useMutation({
-    mutationFn: async ({ orderId, clienteData }: { 
-      orderId: string
-      clienteData: { razon_social: string; cuit: string; condicion_iva: string }
-    }) => {
-      const response = await api.put(`/ordenes-tn/${orderId}/cliente`, clienteData)
-      return response.data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tiendanube-orders'] })
-      addToast({
-        id: String(Date.now()),
-        type: 'success',
-        text: 'Datos del cliente guardados',
-      })
-    },
-    onError: (error: Error) => {
-      addToast({
-        id: String(Date.now() + 1),
-        type: 'danger',
-        text: error.message || 'Error al guardar los datos',
-      })
-    },
-  })
-
   // Mutación para facturar
   const invoiceMutation = useMutation<InvoiceResponse, Error, { 
     orderId: string
     tipoComprobante: number
-    clienteData?: {
-      razon_social: string
-      cuit: string
-      condicion_iva: string
-    }
   }>({
-    mutationFn: async ({ orderId, tipoComprobante, clienteData }) => {
+    mutationFn: async ({ orderId, tipoComprobante }) => {
       const response = await api.post(`/ordenes-tn/${orderId}/facturar`, {
         tipo_comprobante: tipoComprobante,
-        cliente_override: clienteData,
       })
       return response.data
     },
@@ -211,38 +167,13 @@ export default function OrdenesTiendaNube() {
   const handleOpenInvoiceModal = (order: TiendaNubeOrder) => {
     setSelectedOrder(order)
     
-    // Verificar si hay datos del cliente guardados/modificados
-    const hasOverride = order.customer_override_cuit && order.customer_override_cuit.trim() !== ''
-    
-    if (hasOverride) {
-      // Usar datos guardados
-      setClienteNombre(order.customer_override_name || order.customer_name || '')
-      setClienteCuit(order.customer_override_cuit || '')
-      setClienteCondicionIva(order.customer_override_condicion_iva || 'Consumidor Final')
-      setEditClienteEnabled(true) // Mostrar que hay datos editados
-      
-      // Tipo de comprobante según condición IVA guardada
-      if (order.customer_override_condicion_iva === 'Responsable Inscripto') {
-        setSelectedTipoComprobante('1')
-      } else {
-        setSelectedTipoComprobante('6')
-      }
+    // Determinar tipo de comprobante según CUIT
+    if (order.customer_identification && 
+        order.customer_identification.trim() !== '' &&
+        order.customer_identification.length === 11) {
+      setSelectedTipoComprobante('1') // Factura A
     } else {
-      // Usar datos originales de la orden
-      setClienteNombre(order.customer_name || '')
-      setClienteCuit(order.customer_identification || '')
-      setEditClienteEnabled(false)
-      
-      // Determinar condición IVA y tipo comprobante según CUIT original
-      if (order.customer_identification && 
-          order.customer_identification.trim() !== '' &&
-          order.customer_identification.length === 11) {
-        setSelectedTipoComprobante('1') // Factura A
-        setClienteCondicionIva('Responsable Inscripto')
-      } else {
-        setSelectedTipoComprobante('6') // Factura B
-        setClienteCondicionIva('Consumidor Final')
-      }
+      setSelectedTipoComprobante('6') // Factura B
     }
     setInvoiceModalOpen(true)
   }
@@ -250,29 +181,9 @@ export default function OrdenesTiendaNube() {
   const handleInvoice = () => {
     if (!selectedOrder) return
     
-    const clienteData = editClienteEnabled ? {
-      razon_social: clienteNombre.trim() || 'Consumidor Final',
-      cuit: clienteCuit.trim(),
-      condicion_iva: clienteCondicionIva,
-    } : undefined
-    
     invoiceMutation.mutate({
       orderId: String(selectedOrder.id),
       tipoComprobante: parseInt(selectedTipoComprobante),
-      clienteData,
-    })
-  }
-
-  const handleSaveCliente = () => {
-    if (!selectedOrder || !editClienteEnabled) return
-    
-    saveClienteMutation.mutate({
-      orderId: String(selectedOrder.id),
-      clienteData: {
-        razon_social: clienteNombre.trim() || 'Consumidor Final',
-        cuit: clienteCuit.trim(),
-        condicion_iva: clienteCondicionIva,
-      },
     })
   }
 
@@ -455,14 +366,7 @@ export default function OrdenesTiendaNube() {
                       </Text>
                     </td>
                     <td>
-                      {order.customer_override_cuit ? (
-                        <Box>
-                          <span className="tn-link">{order.customer_override_name || order.customer_name}</span>
-                          <Text fontSize="caption" color="primary-interactive">
-                            CUIT: {order.customer_override_cuit}
-                          </Text>
-                        </Box>
-                      ) : order.customer_name ? (
+                      {order.customer_name ? (
                         <span className="tn-link">{order.customer_name}</span>
                       ) : (
                         <Text color="neutral-textLow">No Informado</Text>
@@ -544,101 +448,29 @@ export default function OrdenesTiendaNube() {
           )}
 
           <Box display="flex" flexDirection="column" gap="4">
-            {/* Info de la orden */}
+            {/* Cliente */}
             <Box>
-              <Text fontWeight="bold">Total de la orden:</Text>
-              <Text fontSize="highlight" fontWeight="bold" color="primary-interactive">
+              <Text fontWeight="bold">Cliente:</Text>
+              <Text>{selectedOrder?.customer_name || 'Consumidor Final'}</Text>
+              {selectedOrder?.customer_identification && 
+               selectedOrder.customer_identification.trim() !== '' ? (
+                <Text fontSize="caption" color="neutral-textLow">
+                  CUIT/DNI: {selectedOrder.customer_identification}
+                </Text>
+              ) : (
+                <Text fontSize="caption" color="neutral-textLow">
+                  Sin identificación fiscal
+                </Text>
+              )}
+            </Box>
+
+            {/* Total */}
+            <Box>
+              <Text fontWeight="bold">Total:</Text>
+              <Text>
                 {selectedOrder && formatCurrency(selectedOrder.total)}
               </Text>
             </Box>
-
-            <hr className="tn-separator" />
-
-            {/* Toggle para editar datos del cliente */}
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box>
-                <Text fontWeight="medium">Modificar datos del cliente</Text>
-                <Text fontSize="caption" color="neutral-textLow">
-                  Agregá o editá los datos fiscales para esta factura
-                </Text>
-              </Box>
-              <Toggle
-                name="edit-cliente"
-                active={editClienteEnabled}
-                onChange={() => setEditClienteEnabled(!editClienteEnabled)}
-              />
-            </Box>
-
-            {/* Datos del cliente - Solo lectura o editable */}
-            {editClienteEnabled ? (
-              <Box display="flex" flexDirection="column" gap="3" padding="3" backgroundColor="neutral-surface" borderRadius="2">
-                <Box>
-                  <Label htmlFor="cliente-nombre">Nombre / Razón Social</Label>
-                  <Input
-                    id="cliente-nombre"
-                    type="text"
-                    value={clienteNombre}
-                    onChange={(e) => setClienteNombre(e.target.value)}
-                    placeholder="Ej: Juan Pérez o Empresa S.A."
-                  />
-                </Box>
-                <Box>
-                  <Label htmlFor="cliente-cuit">CUIT / DNI</Label>
-                  <Input
-                    id="cliente-cuit"
-                    type="text"
-                    value={clienteCuit}
-                    onChange={(e) => setClienteCuit(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Ej: 20123456789 (sin guiones)"
-                  />
-                  <Text fontSize="caption" color="neutral-textLow">
-                    {clienteCuit.length === 11 ? '✓ CUIT válido' : 
-                     clienteCuit.length === 8 ? '✓ DNI válido' : 
-                     clienteCuit.length > 0 ? 'Ingresá 11 dígitos para CUIT o 8 para DNI' : ''}
-                  </Text>
-                </Box>
-                <Box>
-                  <Label htmlFor="cliente-condicion">Condición IVA</Label>
-                  <Select
-                    id="cliente-condicion"
-                    name="cliente-condicion"
-                    value={clienteCondicionIva}
-                    onChange={(e) => {
-                      setClienteCondicionIva(e.target.value)
-                      // Auto-seleccionar tipo de comprobante según condición
-                      if (e.target.value === 'Responsable Inscripto') {
-                        setSelectedTipoComprobante('1')
-                      } else if (e.target.value === 'Monotributista') {
-                        setSelectedTipoComprobante('6')
-                      } else {
-                        setSelectedTipoComprobante('6')
-                      }
-                    }}
-                  >
-                    <Select.Option label="Consumidor Final" value="Consumidor Final" />
-                    <Select.Option label="Responsable Inscripto" value="Responsable Inscripto" />
-                    <Select.Option label="Monotributista" value="Monotributista" />
-                    <Select.Option label="Exento" value="Exento" />
-                  </Select>
-                </Box>
-              </Box>
-            ) : (
-              <Box padding="3" backgroundColor="neutral-surface" borderRadius="2">
-                <Text fontWeight="medium">{selectedOrder?.customer_name || 'Consumidor Final'}</Text>
-                {selectedOrder?.customer_identification && 
-                 selectedOrder.customer_identification.trim() !== '' ? (
-                  <Text fontSize="caption" color="neutral-textLow">
-                    CUIT/DNI: {selectedOrder.customer_identification}
-                  </Text>
-                ) : (
-                  <Text fontSize="caption" color="neutral-textLow">
-                    Sin identificación fiscal - Se factura como Consumidor Final
-                  </Text>
-                )}
-              </Box>
-            )}
-
-            <hr className="tn-separator" />
 
             {/* Tipo de comprobante */}
             <Box>
@@ -650,12 +482,9 @@ export default function OrdenesTiendaNube() {
                 onChange={(e) => setSelectedTipoComprobante(e.target.value)}
               >
                 {TIPO_COMPROBANTE_OPTIONS.filter((opt) => {
-                  // Si tiene CUIT válido (editado o original), permitir Factura A
-                  const cuitValido = editClienteEnabled 
-                    ? clienteCuit.length === 11
-                    : selectedOrder?.customer_identification?.length === 11
-                  if (!cuitValido && opt.value === '1') {
-                    return false
+                  if (!selectedOrder?.customer_identification || 
+                      selectedOrder.customer_identification.trim() === '') {
+                    return opt.value !== '1'
                   }
                   return true
                 }).map((opt) => (
@@ -675,27 +504,14 @@ export default function OrdenesTiendaNube() {
           </Box>
         </Modal.Body>
         <Modal.Footer>
-          <Box display="flex" gap="2" justifyContent="space-between" width="100%">
-            <Button onClick={() => setInvoiceModalOpen(false)}>Cancelar</Button>
-            <Box display="flex" gap="2">
-              {editClienteEnabled && (
-                <Button
-                  appearance="neutral"
-                  onClick={handleSaveCliente}
-                  disabled={saveClienteMutation.isPending || !clienteNombre.trim()}
-                >
-                  {saveClienteMutation.isPending ? <Spinner size="small" /> : 'Guardar datos'}
-                </Button>
-              )}
-              <Button
-                appearance="primary"
-                onClick={handleInvoice}
-                disabled={invoiceMutation.isPending}
-              >
-                {invoiceMutation.isPending ? <Spinner size="small" /> : 'Facturar'}
-              </Button>
-            </Box>
-          </Box>
+          <Button onClick={() => setInvoiceModalOpen(false)}>Cancelar</Button>
+          <Button
+            appearance="primary"
+            onClick={handleInvoice}
+            disabled={invoiceMutation.isPending}
+          >
+            {invoiceMutation.isPending ? <Spinner size="small" /> : 'Facturar'}
+          </Button>
         </Modal.Footer>
       </Modal>
 

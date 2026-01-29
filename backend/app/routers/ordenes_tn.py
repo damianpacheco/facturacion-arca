@@ -49,10 +49,6 @@ class OrderResponse(BaseModel):
     invoiced: bool = False
     factura_id: Optional[int] = None
     factura_numero: Optional[str] = None
-    # Datos del cliente modificados/agregados
-    customer_override_name: Optional[str] = None
-    customer_override_cuit: Optional[str] = None
-    customer_override_condicion_iva: Optional[str] = None
 
 
 class OrderListResponse(BaseModel):
@@ -63,17 +59,9 @@ class OrderListResponse(BaseModel):
     per_page: int
 
 
-class ClienteOverride(BaseModel):
-    """Datos personalizados del cliente para la factura."""
-    razon_social: str
-    cuit: str
-    condicion_iva: str = "Consumidor Final"
-
-
 class InvoiceOrderRequest(BaseModel):
     """Request para facturar una orden."""
     tipo_comprobante: Optional[int] = None  # Si no se especifica, usa el default
-    cliente_override: Optional[ClienteOverride] = None  # Datos personalizados del cliente
 
 
 class InvoiceOrderResponse(BaseModel):
@@ -177,10 +165,6 @@ async def list_orders(
                 invoiced=is_invoiced,
                 factura_id=tn_order.factura_id if tn_order else None,
                 factura_numero=factura_numero,
-                # Datos del cliente modificados
-                customer_override_name=tn_order.customer_override_name if tn_order else None,
-                customer_override_cuit=tn_order.customer_override_cuit if tn_order else None,
-                customer_override_condicion_iva=tn_order.customer_override_condicion_iva if tn_order else None,
             ))
 
         return OrderListResponse(
@@ -234,59 +218,6 @@ async def get_order_detail(
         raise HTTPException(status_code=500, detail=f"Error obteniendo orden: {str(e)}")
 
 
-class UpdateClienteRequest(BaseModel):
-    """Request para actualizar datos del cliente de una orden."""
-    razon_social: str
-    cuit: str
-    condicion_iva: str = "Consumidor Final"
-
-
-@router.put("/{order_id}/cliente")
-async def update_order_cliente(
-    order_id: str,
-    request: UpdateClienteRequest,
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Guarda/actualiza los datos del cliente para una orden.
-    Estos datos se usarán al facturar.
-    """
-    store = await get_active_store(db)
-    
-    # Buscar o crear registro de la orden
-    result = await db.execute(
-        select(TiendaNubeOrder).where(
-            TiendaNubeOrder.store_id == store.store_id,
-            TiendaNubeOrder.order_id == order_id
-        )
-    )
-    tn_order = result.scalar_one_or_none()
-    
-    if not tn_order:
-        # Crear registro si no existe
-        tn_order = TiendaNubeOrder(
-            store_id=store.store_id,
-            order_id=order_id,
-            invoiced=False,
-        )
-        db.add(tn_order)
-    
-    # Actualizar datos del cliente
-    tn_order.customer_override_name = request.razon_social
-    tn_order.customer_override_cuit = request.cuit
-    tn_order.customer_override_condicion_iva = request.condicion_iva
-    
-    await db.flush()
-    
-    return {
-        "success": True,
-        "message": "Datos del cliente actualizados",
-        "customer_override_name": tn_order.customer_override_name,
-        "customer_override_cuit": tn_order.customer_override_cuit,
-        "customer_override_condicion_iva": tn_order.customer_override_condicion_iva,
-    }
-
-
 @router.post("/{order_id}/facturar", response_model=InvoiceOrderResponse)
 async def invoice_order(
     order_id: str,
@@ -330,40 +261,8 @@ async def invoice_order(
         # Determinar tipo de comprobante
         tipo_comprobante = request.tipo_comprobante or store.default_invoice_type
         
-        # Determinar datos del cliente (prioridad: request > guardados > orden original)
-        if request.cliente_override:
-            # Usar datos del request y guardarlos
-            cliente_data = {
-                "razon_social": request.cliente_override.razon_social,
-                "cuit": request.cliente_override.cuit,
-                "condicion_iva": request.cliente_override.condicion_iva,
-                "email": invoice_data["cliente"].get("email", ""),
-                "domicilio": invoice_data["cliente"].get("domicilio", ""),
-                "telefono": invoice_data["cliente"].get("telefono", ""),
-            }
-            # Guardar en la orden
-            if not existing_order:
-                existing_order = TiendaNubeOrder(
-                    store_id=store.store_id,
-                    order_id=order_id,
-                    invoiced=False,
-                )
-                db.add(existing_order)
-            existing_order.customer_override_name = request.cliente_override.razon_social
-            existing_order.customer_override_cuit = request.cliente_override.cuit
-            existing_order.customer_override_condicion_iva = request.cliente_override.condicion_iva
-        elif existing_order and existing_order.customer_override_cuit:
-            # Usar datos guardados previamente
-            cliente_data = {
-                "razon_social": existing_order.customer_override_name or invoice_data["cliente"]["razon_social"],
-                "cuit": existing_order.customer_override_cuit,
-                "condicion_iva": existing_order.customer_override_condicion_iva or "Consumidor Final",
-                "email": invoice_data["cliente"].get("email", ""),
-                "domicilio": invoice_data["cliente"].get("domicilio", ""),
-                "telefono": invoice_data["cliente"].get("telefono", ""),
-            }
-        else:
-            cliente_data = invoice_data["cliente"]
+        # Usar datos del cliente de la orden
+        cliente_data = invoice_data["cliente"]
         
         # Si el cliente es Responsable Inscripto, usar Factura A
         if cliente_data["condicion_iva"] == "Responsable Inscripto":
