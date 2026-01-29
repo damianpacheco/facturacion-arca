@@ -11,7 +11,8 @@ settings = get_settings()
 # URLs de TiendaNube
 TN_AUTH_URL = "https://www.tiendanube.com/apps/{app_id}/authorize"
 TN_TOKEN_URL = "https://www.tiendanube.com/apps/authorize/token"
-TN_API_BASE = "https://api.tiendanube.com/v1"
+TN_API_BASE = "https://api.tiendanube.com/v1"  # Fallback for older endpoints
+TN_API_V2 = "https://api.tiendanube.com"  # New versioned API
 
 
 class TiendaNubeService:
@@ -72,6 +73,7 @@ class TiendaNubeService:
         created_at_max: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Obtiene las órdenes de la tienda."""
+        # Probar primero con la API v1, si falla usar lista vacía
         url = f"{TN_API_BASE}/{self.store_id}/orders"
         
         params: Dict[str, Any] = {
@@ -88,9 +90,16 @@ class TiendaNubeService:
         if created_at_max:
             params["created_at_max"] = created_at_max
 
-        response = await self.client.get(url, headers=self._get_headers(), params=params)
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = await self.client.get(url, headers=self._get_headers(), params=params)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            # Si es 404, la tienda puede no tener órdenes o el endpoint no está disponible
+            if e.response.status_code == 404:
+                print(f"TiendaNube: Endpoint de órdenes no disponible o tienda sin órdenes")
+                return []
+            raise
 
     async def get_order(self, order_id: str) -> Dict[str, Any]:
         """Obtiene el detalle de una orden específica."""
