@@ -96,6 +96,9 @@ export default function OrdenesTiendaNube() {
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<TiendaNubeOrder | null>(null)
   const [selectedTipoComprobante, setSelectedTipoComprobante] = useState('6')
+  
+  // Animación de éxito - trackear orden recién facturada
+  const [recentlyInvoicedOrderId, setRecentlyInvoicedOrderId] = useState<number | null>(null)
 
   // Modal de ver factura
   const [viewFacturaModalOpen, setViewFacturaModalOpen] = useState(false)
@@ -144,15 +147,25 @@ export default function OrdenesTiendaNube() {
       return response.data
     },
     onSuccess: (data) => {
+      // Guardar ID para animación antes de cerrar modal
+      const invoicedOrderId = selectedOrder?.id || null
+      
       queryClient.invalidateQueries({ queryKey: ['tiendanube-orders'] })
       setInvoiceModalOpen(false)
       setSelectedOrder(null)
       
-      // Mostrar toast de éxito
+      // Activar animación de éxito en la fila
+      if (invoicedOrderId) {
+        setRecentlyInvoicedOrderId(invoicedOrderId)
+        // Limpiar después de que termine la animación (2s)
+        setTimeout(() => setRecentlyInvoicedOrderId(null), 2500)
+      }
+      
+      // Mostrar toast de éxito con número de factura
       addToast({
         id: String(Date.now()),
         type: 'success',
-        text: `Factura ${data.numero_completo || ''} emitida correctamente`,
+        text: `✓ Factura ${data.numero_completo || ''} emitida correctamente`,
       })
     },
     onError: (error) => {
@@ -356,7 +369,10 @@ export default function OrdenesTiendaNube() {
               </thead>
               <tbody>
                 {ordersData?.items.map((order) => (
-                  <tr key={order.id}>
+                  <tr 
+                    key={order.id}
+                    className={recentlyInvoicedOrderId === order.id ? 'invoice-success-row' : ''}
+                  >
                     <td>
                       <span className="tn-link" style={{ fontWeight: 600 }}>#{order.number}</span>
                     </td>
@@ -390,8 +406,15 @@ export default function OrdenesTiendaNube() {
                     <td>
                       {order.invoiced ? (
                         <Box display="flex" alignItems="center" gap="1">
-                          <CheckCircleIcon size={14} />
-                          <Text fontSize="caption">{order.factura_numero}</Text>
+                          <span className={recentlyInvoicedOrderId === order.id ? 'success-check-icon' : ''}>
+                            <CheckCircleIcon size={14} />
+                          </span>
+                          <Text 
+                            fontSize="caption"
+                            className={recentlyInvoicedOrderId === order.id ? 'factura-numero-new' : ''}
+                          >
+                            {order.factura_numero}
+                          </Text>
                         </Box>
                       ) : (
                         <span className="tn-tag tn-tag-neutral">Pendiente</span>

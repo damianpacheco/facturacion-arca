@@ -10,6 +10,7 @@ import type {
   UltimoComprobante,
   EstadoARCA,
 } from '../types'
+import { translateAfipError, isAfipError } from '../utils/afipErrors'
 
 // En producción usar la URL del backend en Render, en desarrollo usar proxy local
 const API_URL = import.meta.env.VITE_API_URL || '/api'
@@ -28,19 +29,32 @@ api.interceptors.response.use(
   (error) => {
     // Mejor manejo de errores
     let message = 'Error desconocido'
+    let suggestion: string | undefined
     
     if (error.code === 'ECONNABORTED') {
       message = 'La solicitud tardó demasiado. Intentá de nuevo.'
     } else if (error.message === 'Network Error') {
       message = 'Error de conexión. Verificá tu conexión a internet.'
     } else if (error.response?.data?.detail) {
-      message = error.response.data.detail
+      const rawMessage = error.response.data.detail
+      
+      // Si es un error de AFIP, traducirlo a lenguaje humano
+      if (isAfipError(rawMessage)) {
+        const translated = translateAfipError(rawMessage)
+        message = translated.message
+        suggestion = translated.suggestion
+      } else {
+        message = rawMessage
+      }
     } else if (error.message) {
       message = error.message
     }
     
     console.error('API Error:', { url: error.config?.url, status: error.response?.status, message })
-    return Promise.reject(new Error(message))
+    
+    // Crear error con mensaje y sugerencia
+    const enhancedError = new Error(suggestion ? `${message}\n\n💡 ${suggestion}` : message)
+    return Promise.reject(enhancedError)
   }
 )
 
