@@ -139,8 +139,11 @@ export default function OrdenesTiendaNube() {
 
   const handleOpenInvoiceModal = (order: TiendaNubeOrder) => {
     setSelectedOrder(order)
-    // Si tiene CUIT, sugerir Factura A
-    if (order.customer_identification && order.customer_identification.length === 11) {
+    // Si tiene CUIT válido (11 dígitos), sugerir Factura A
+    // Si no tiene identificación o es inválida, usar Factura B
+    if (order.customer_identification && 
+        order.customer_identification.trim() !== '' &&
+        order.customer_identification.length === 11) {
       setSelectedTipoComprobante('1')
     } else {
       setSelectedTipoComprobante('6')
@@ -402,12 +405,30 @@ export default function OrdenesTiendaNube() {
           )}
 
           <Box display="flex" flexDirection="column" gap="4">
+            {/* Alerta informativa si no hay identificación */}
+            {(!selectedOrder?.customer_identification || 
+              selectedOrder.customer_identification.trim() === '') && (
+              <Alert appearance="primary" title="Facturación a Consumidor Final">
+                Esta orden no tiene CUIT/DNI del cliente. Se facturará como{' '}
+                <strong>Consumidor Final</strong> con{' '}
+                <strong>
+                  {selectedTipoComprobante === '6' ? 'Factura B' : 
+                   selectedTipoComprobante === '11' ? 'Factura C' : 'Factura B'}
+                </strong>.
+              </Alert>
+            )}
+
             <Box>
               <Text fontWeight="bold">Cliente:</Text>
-              <Text>{selectedOrder?.customer_name || 'Sin nombre'}</Text>
-              {selectedOrder?.customer_identification && (
+              <Text>{selectedOrder?.customer_name || 'Consumidor Final'}</Text>
+              {selectedOrder?.customer_identification && 
+               selectedOrder.customer_identification.trim() !== '' ? (
                 <Text fontSize="caption" color="neutral-textLow">
                   CUIT/DNI: {selectedOrder.customer_identification}
+                </Text>
+              ) : (
+                <Text fontSize="caption" color="neutral-textLow">
+                  Sin identificación fiscal
                 </Text>
               )}
             </Box>
@@ -427,17 +448,25 @@ export default function OrdenesTiendaNube() {
                 value={selectedTipoComprobante}
                 onChange={(e) => setSelectedTipoComprobante(e.target.value)}
               >
-                {TIPO_COMPROBANTE_OPTIONS.map((opt) => (
+                {TIPO_COMPROBANTE_OPTIONS.filter((opt) => {
+                  // Si no hay identificación, no permitir Factura A
+                  if (!selectedOrder?.customer_identification || 
+                      selectedOrder.customer_identification.trim() === '') {
+                    return opt.value !== '1'
+                  }
+                  return true
+                }).map((opt) => (
                   <Select.Option key={opt.value} label={opt.label} value={opt.value} />
                 ))}
               </Select>
             </Box>
 
             {selectedOrder?.customer_identification &&
+              selectedOrder.customer_identification.trim() !== '' &&
               selectedOrder.customer_identification.length !== 11 &&
               selectedTipoComprobante === '1' && (
                 <Alert appearance="warning" title="Atención">
-                  El cliente no tiene CUIT válido. Para Factura A se requiere CUIT.
+                  El cliente no tiene CUIT válido (11 dígitos). Para Factura A se requiere CUIT.
                 </Alert>
               )}
           </Box>
