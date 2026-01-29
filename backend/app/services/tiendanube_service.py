@@ -278,6 +278,136 @@ class TiendaNubeService:
 
         return results
 
+    # =====================
+    # Order Custom Fields (visibles en UI del Admin)
+    # =====================
+
+    async def get_order_custom_fields(self) -> List[Dict[str, Any]]:
+        """Obtiene todos los custom fields de órdenes de la tienda."""
+        url = f"{TN_API_BASE}/{self.store_id}/orders/custom-fields"
+        response = await self.client.get(url, headers=self._get_headers())
+        response.raise_for_status()
+        return response.json()
+
+    async def create_order_custom_field(
+        self,
+        name: str,
+        value_type: str,
+        description: Optional[str] = None,
+        read_only: bool = True,
+        values: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Crea un custom field para órdenes.
+        
+        Args:
+            name: Nombre del campo
+            value_type: Tipo de valor (text, text_list, numeric, date)
+            description: Descripción opcional
+            read_only: Si es True, el merchant no puede editar el valor
+            values: Lista de valores posibles (solo para text_list)
+        """
+        url = f"{TN_API_BASE}/{self.store_id}/orders/custom-fields"
+        data: Dict[str, Any] = {
+            "name": name,
+            "value_type": value_type,
+            "read_only": read_only,
+            "values": values or [],
+        }
+        if description:
+            data["description"] = description
+
+        response = await self.client.post(url, headers=self._get_headers(), json=data)
+        response.raise_for_status()
+        return response.json()
+
+    async def set_order_custom_field_values(
+        self,
+        order_id: str,
+        field_values: List[Dict[str, Any]],
+    ) -> None:
+        """
+        Asocia valores de custom fields a una orden específica.
+        
+        Args:
+            order_id: ID de la orden
+            field_values: Lista de {id: custom_field_id, value: valor}
+        """
+        url = f"{TN_API_BASE}/{self.store_id}/orders/{order_id}/custom-fields/values"
+        response = await self.client.put(url, headers=self._get_headers(), json=field_values)
+        response.raise_for_status()
+
+    async def ensure_invoice_custom_fields_exist(self) -> Dict[str, str]:
+        """
+        Asegura que existan los custom fields de facturación.
+        Retorna un diccionario con los IDs de cada campo.
+        """
+        existing_fields = await self.get_order_custom_fields()
+        
+        # Mapear campos existentes por nombre
+        fields_by_name = {f["name"]: f for f in existing_fields}
+        
+        # Campos que necesitamos
+        required_fields = [
+            ("Factura", "text", "Número de factura ARCA"),
+            ("CAE", "text", "Código de Autorización Electrónica"),
+            ("Fecha Factura", "date", "Fecha de emisión de la factura"),
+        ]
+        
+        field_ids = {}
+        
+        for name, value_type, description in required_fields:
+            if name in fields_by_name:
+                field_ids[name] = fields_by_name[name]["id"]
+            else:
+                # Crear el campo
+                try:
+                    result = await self.create_order_custom_field(
+                        name=name,
+                        value_type=value_type,
+                        description=description,
+                        read_only=True,
+                    )
+                    field_ids[name] = result["id"]
+                except httpx.HTTPStatusError as e:
+                    print(f"Error creando custom field {name}: {e}")
+        
+        return field_ids
+
+    async def save_invoice_to_order_custom_fields(
+        self,
+        order_id: str,
+        factura_numero: str,
+        factura_cae: str,
+        factura_fecha: str,
+    ) -> None:
+        """
+        Guarda los datos de factura en los custom fields de una orden.
+        Estos campos son visibles en la UI del admin de TiendaNube.
+        """
+        # Asegurar que existan los custom fields
+        field_ids = await self.ensure_invoice_custom_fields_exist()
+        
+        if not field_ids:
+            print("No se pudieron obtener/crear los custom fields")
+            return
+        
+        # Preparar valores a guardar
+        field_values = []
+        
+        if "Factura" in field_ids:
+            field_values.append({"id": field_ids["Factura"], "value": factura_numero})
+        
+        if "CAE" in field_ids:
+            field_values.append({"id": field_ids["CAE"], "value": factura_cae})
+        
+        if "Fecha Factura" in field_ids:
+            # El formato de fecha debe ser YYYY-MM-DD
+            field_values.append({"id": field_ids["Fecha Factura"], "value": factura_fecha})
+        
+        if field_values:
+            await self.set_order_custom_field_values(order_id, field_values)
+
 
 def map_order_to_invoice_data(order: Dict[str, Any]) -> Dict[str, Any]:
     """Mapea una orden de TiendaNube a datos de factura."""

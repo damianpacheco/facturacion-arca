@@ -400,10 +400,10 @@ async def invoice_order(
 
         await db.commit()
 
-        # Guardar datos de factura en metafields de TiendaNube
+        # Guardar datos de factura en TiendaNube
         try:
-            # Crear nuevo servicio para guardar metafields
-            metafield_service = TiendaNubeService(
+            # Crear nuevo servicio para guardar datos
+            tn_service = TiendaNubeService(
                 access_token=store.access_token,
                 store_id=store.store_id
             )
@@ -411,7 +411,8 @@ async def invoice_order(
             # Construir URL del PDF (usa backend_url para acceso público)
             pdf_url = f"{settings.backend_url}/api/facturas/{factura.id}/pdf"
             
-            await metafield_service.save_invoice_to_order_metafields(
+            # 1. Guardar en metafields (datos completos para la app)
+            await tn_service.save_invoice_to_order_metafields(
                 order_id=order_id,
                 factura_numero=factura.numero_completo,
                 factura_cae=resultado_arca["cae"],
@@ -419,10 +420,19 @@ async def invoice_order(
                 factura_pdf_url=pdf_url,
                 factura_fecha=factura.fecha.isoformat(),
             )
-            await metafield_service.close()
-        except Exception as metafield_error:
-            # No fallar si los metafields no se pueden guardar
-            print(f"Advertencia: No se pudieron guardar metafields en TiendaNube: {metafield_error}")
+            
+            # 2. Guardar en custom fields (visibles en UI del admin)
+            await tn_service.save_invoice_to_order_custom_fields(
+                order_id=order_id,
+                factura_numero=factura.numero_completo,
+                factura_cae=resultado_arca["cae"],
+                factura_fecha=factura.fecha.isoformat(),
+            )
+            
+            await tn_service.close()
+        except Exception as tn_error:
+            # No fallar si no se pueden guardar los datos en TiendaNube
+            print(f"Advertencia: No se pudieron guardar datos en TiendaNube: {tn_error}")
 
         return InvoiceOrderResponse(
             success=True,
