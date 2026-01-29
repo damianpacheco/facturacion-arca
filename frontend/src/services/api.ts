@@ -90,7 +90,8 @@ export async function createFactura(data: FacturaCreate): Promise<Factura> {
 }
 
 export function getFacturaPdfUrl(id: number): string {
-  return `/api/facturas/${id}/pdf`
+  const baseUrl = import.meta.env.VITE_API_URL || '/api'
+  return `${baseUrl}/facturas/${id}/pdf`
 }
 
 // ============ ARCA ============

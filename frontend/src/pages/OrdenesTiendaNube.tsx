@@ -22,13 +22,14 @@ import {
 } from '@nimbus-ds/components'
 import {
   CheckCircleIcon,
-  ExternalLinkIcon,
   SearchIcon,
   InvoiceIcon,
   RedoIcon,
   StoreIcon,
+  EyeIcon,
+  DownloadIcon,
 } from '@nimbus-ds/icons'
-import api, { getTiendaNubeInstallUrl } from '../services/api'
+import api, { getTiendaNubeInstallUrl, getFacturaPdfUrl } from '../services/api'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -349,21 +350,35 @@ export default function OrdenesTiendaNube() {
                         )}
                       </Table.Cell>
                       <Table.Cell>
-                        {!order.invoiced && (
-                          <IconButton
-                            source={<InvoiceIcon size="small" />}
-                            size="2rem"
-                            onClick={() => handleOpenInvoiceModal(order)}
-                          />
-                        )}
-                        {order.factura_id && (
-                          <a href={`/facturas?id=${order.factura_id}`}>
+                        <Box display="flex" gap="1">
+                          {!order.invoiced && (
                             <IconButton
-                              source={<ExternalLinkIcon size="small" />}
+                              source={<InvoiceIcon size="small" />}
                               size="2rem"
+                              onClick={() => handleOpenInvoiceModal(order)}
                             />
-                          </a>
-                        )}
+                          )}
+                          {order.factura_id && (
+                            <>
+                              <a href={`/facturas?id=${order.factura_id}`}>
+                                <IconButton
+                                  source={<EyeIcon size="small" />}
+                                  size="2rem"
+                                />
+                              </a>
+                              <a
+                                href={getFacturaPdfUrl(order.factura_id)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <IconButton
+                                  source={<DownloadIcon size="small" />}
+                                  size="2rem"
+                                />
+                              </a>
+                            </>
+                          )}
+                        </Box>
                       </Table.Cell>
                     </Table.Row>
                   ))}
