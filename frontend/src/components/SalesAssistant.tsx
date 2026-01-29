@@ -5,25 +5,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Box, Text, Button, Spinner } from '@nimbus-ds/components'
-import { ChevronRightIcon } from '@nimbus-ds/icons'
-
-// Ícono de Sparkles/AI (estrellitas)
-const SparklesIcon = ({ size = 24 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
-    <path d="M5 19l1 3 1-3 3-1-3-1-1-3-1 3-3 1 3 1z" />
-    <path d="M19 13l1 2 1-2 2-1-2-1-1-2-1 2-2 1 2 1z" />
-  </svg>
-)
+import { ChevronRightIcon, GenerativeStarsIcon } from '@nimbus-ds/icons'
 import { sendChatMessage } from '../services/api'
 import './SalesAssistant.css'
 
@@ -122,7 +104,7 @@ export default function SalesAssistant() {
         {isOpen ? (
           <span style={{ fontSize: '24px', lineHeight: 1 }}>×</span>
         ) : (
-          <SparklesIcon size={24} />
+          <GenerativeStarsIcon size={24} />
         )}
       </button>
 
@@ -132,7 +114,7 @@ export default function SalesAssistant() {
           {/* Header */}
           <div className="sales-assistant-header">
             <Box display="flex" alignItems="center" gap="2">
-              <SparklesIcon size={20} />
+              <GenerativeStarsIcon size={20} />
               <Text fontWeight="bold" color="neutral-background">
                 Asistente de Ventas
               </Text>
