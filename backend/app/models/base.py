@@ -8,8 +8,24 @@ from app.config import get_settings
 
 settings = get_settings()
 
+
+def get_async_database_url(url: str) -> str:
+    """Convierte URL de database al formato async."""
+    # PostgreSQL: postgres:// o postgresql:// -> postgresql+asyncpg://
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # SQLite: sqlite:// -> sqlite+aiosqlite://
+    if url.startswith("sqlite://") and "+aiosqlite" not in url:
+        return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+    return url
+
+
+database_url = get_async_database_url(settings.database_url)
+
 engine = create_async_engine(
-    settings.database_url,
+    database_url,
     echo=settings.debug,
 )
 

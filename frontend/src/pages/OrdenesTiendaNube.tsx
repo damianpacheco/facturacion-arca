@@ -115,7 +115,7 @@ export default function OrdenesTiendaNube() {
     },
   })
 
-  // Obtener órdenes
+  // Obtener órdenes (auto-refresh cada 30 segundos)
   const {
     data: ordersData,
     isLoading: loadingOrders,
@@ -132,6 +132,8 @@ export default function OrdenesTiendaNube() {
       return response.data
     },
     enabled: storeStatus?.connected === true,
+    refetchInterval: 30000, // Auto-refresh cada 30 segundos
+    refetchIntervalInBackground: false, // Solo cuando la pestaña está activa
   })
 
   // Mutación para facturar
