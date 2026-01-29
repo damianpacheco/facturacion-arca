@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     tn_auto_invoice: bool = False  # Facturación automática activada/desactivada
     tn_default_invoice_type: int = 6  # Factura B por defecto
 
+    # Frontend URL (para redirecciones después de OAuth)
+    frontend_url: str = "http://localhost:5173"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

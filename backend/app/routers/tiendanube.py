@@ -120,8 +120,9 @@ async def oauth_callback(
 
         await service.close()
 
-        # Redirigir de vuelta a la app
-        return RedirectResponse(url="/ordenes-tiendanube?connected=true")
+        # Redirigir de vuelta al frontend
+        frontend_url = settings.frontend_url.rstrip("/")
+        return RedirectResponse(url=f"{frontend_url}/ordenes-tiendanube?connected=true")
 
     except Exception as e:
         await service.close()
