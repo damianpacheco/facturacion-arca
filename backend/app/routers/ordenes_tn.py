@@ -372,16 +372,14 @@ async def invoice_order(
         # Buscar o crear cliente
         cuit_raw = (cliente_data.get("cuit") or "").replace("-", "").strip()
         
-        # Normalizar CUIT: si es DNI (8 dígitos), convertir a CUIT genérico
-        # Si está vacío o es inválido, usar CUIT genérico para Consumidor Final
-        if cuit_raw and len(cuit_raw) == 11 and cuit_raw.isdigit():
+        # Guardar el documento tal cual (CUIT de 11 o DNI de 8 dígitos)
+        # Para la BD usamos el valor original, para AFIP se determina el tipo arriba
+        if cuit_raw and cuit_raw.isdigit() and len(cuit_raw) in [8, 11]:
             cuit = cuit_raw
-        elif cuit_raw and len(cuit_raw) == 8 and cuit_raw.isdigit():
-            # DNI: usar formato 20-DNI-X (X=dígito verificador simplificado)
-            cuit = f"20{cuit_raw}0"  # Formato aproximado para DNI
         else:
             cuit = "00000000000"  # Consumidor Final genérico
         
+        # Buscar cliente existente por documento
         if cuit != "00000000000":
             result = await db.execute(
                 select(Cliente).where(Cliente.cuit == cuit)
@@ -423,17 +421,34 @@ async def invoice_order(
             iva_detalle = []
 
         # Determinar tipo de documento del receptor
-        # CUIT genérico "00000000000" = Consumidor Final sin identificar
-        cuit_valido = cuit and len(cuit) == 11 and cuit != "00000000000" and int(cuit) > 0
+        # Para AFIP:
+        # - DocTipo 80 = CUIT (solo para Resp. Inscripto con CUIT real)
+        # - DocTipo 96 = DNI
+        # - DocTipo 99 = Sin identificar (Consumidor Final sin datos)
         
-        if cliente_data["condicion_iva"] == "Responsable Inscripto" and cuit_valido:
+        cuit_original = (cliente_data.get("cuit") or "").replace("-", "").strip()
+        
+        if cliente_data["condicion_iva"] == "Responsable Inscripto":
+            # Responsable Inscripto requiere CUIT válido
+            if cuit_original and len(cuit_original) == 11 and cuit_original.isdigit():
+                tipo_doc = 80  # CUIT
+                nro_doc = int(cuit_original)
+            else:
+                # Error: RI sin CUIT válido
+                raise HTTPException(
+                    status_code=400,
+                    detail="Responsable Inscripto requiere CUIT válido de 11 dígitos"
+                )
+        elif cuit_original and len(cuit_original) == 11 and cuit_original.isdigit() and cuit_original != "00000000000":
+            # Tiene CUIT válido (aunque sea Consumidor Final o Monotributista)
             tipo_doc = 80  # CUIT
-            nro_doc = int(cuit)
-        elif cuit_valido:
-            tipo_doc = 80  # CUIT
-            nro_doc = int(cuit)
+            nro_doc = int(cuit_original)
+        elif cuit_original and len(cuit_original) == 8 and cuit_original.isdigit():
+            # Tiene DNI
+            tipo_doc = 96  # DNI
+            nro_doc = int(cuit_original)
         else:
-            # Consumidor Final sin identificar
+            # Sin identificación - Consumidor Final genérico
             tipo_doc = 99  # Sin identificar
             nro_doc = 0
 
