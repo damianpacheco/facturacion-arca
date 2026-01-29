@@ -3,33 +3,32 @@
 /* Botón flotante */
 .sales-assistant-fab {
   position: fixed;
-  bottom: 24px;
+  bottom: 80px;
   right: 24px;
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: var(--primary-interactive);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 89, 213, 0.3);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
   transition: all 0.2s ease;
   z-index: 1000;
 }
 
 .sales-assistant-fab:hover {
-  background: var(--primary-interactive-hover);
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 89, 213, 0.4);
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
 }
 
 /* Panel de chat */
 .sales-assistant-panel {
   position: fixed;
-  bottom: 96px;
+  bottom: 148px;
   right: 24px;
   width: 380px;
   max-width: calc(100vw - 48px);
@@ -129,12 +128,13 @@
 .sales-assistant-message.user {
   align-self: flex-end;
   background: var(--primary-interactive);
-  color: white;
   border-bottom-right-radius: 4px;
 }
 
-.sales-assistant-message.user span {
-  color: white !important;
+.sales-assistant-message.user,
+.sales-assistant-message.user span,
+.sales-assistant-message.user * {
+  color: #ffffff !important;
 }
 
 .sales-assistant-message.assistant {
