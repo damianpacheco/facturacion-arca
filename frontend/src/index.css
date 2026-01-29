@@ -641,3 +641,239 @@ body {
   color: var(--text-secondary) !important;
   font-weight: 600 !important;
 }
+
+/* ========================================
+   MICROINTERACCIONES GLOBALES
+   ======================================== */
+
+/* Transiciones suaves por defecto */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+
+/* Excluir elementos que no deben tener transición automática */
+input, textarea, [class*="spinner"], [class*="Spinner"], svg {
+  transition: none;
+}
+
+/* Botones con efecto hover elevado */
+[class*="nimbus--button"] {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[class*="nimbus--button"]:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+[class*="nimbus--button"]:not(:disabled):active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+[class*="nimbus--button--primary"]:not(:disabled):hover {
+  box-shadow: 0 4px 15px rgba(0, 89, 213, 0.35) !important;
+}
+
+/* Cards con hover sutil */
+[class*="nimbus--card"] {
+  transition: all 0.25s ease !important;
+}
+
+[class*="nimbus--card"]:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* IconButtons con efecto */
+[class*="nimbus--icon-button"] {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[class*="nimbus--icon-button"]:not(:disabled):hover {
+  transform: scale(1.1);
+  background: var(--neutral-surface) !important;
+}
+
+[class*="nimbus--icon-button"]:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+/* Inputs con focus mejorado */
+[class*="nimbus--input"]:focus-within,
+[class*="nimbus--select"]:focus-within {
+  box-shadow: 0 0 0 3px rgba(0, 89, 213, 0.15) !important;
+  border-color: var(--primary-interactive) !important;
+}
+
+/* Tags con hover */
+[class*="nimbus--tag"] {
+  transition: all 0.2s ease !important;
+}
+
+/* Links con underline animado */
+.tn-link {
+  position: relative;
+  text-decoration: none !important;
+}
+
+.tn-link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.25s ease;
+}
+
+.tn-link:hover::after {
+  width: 100%;
+}
+
+/* Tabla rows con hover */
+.tn-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.tn-table tbody tr:hover {
+  background-color: rgba(0, 89, 213, 0.03);
+}
+
+/* Quick filters con efecto activo */
+.tn-quick-filter {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tn-quick-filter:hover:not(.active) {
+  background: var(--neutral-surface);
+  transform: translateY(-1px);
+}
+
+.tn-quick-filter:active {
+  transform: scale(0.97);
+}
+
+/* Botones custom con ripple-like effect */
+.tn-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tn-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.tn-btn:not(:disabled):active {
+  transform: translateY(0) scale(0.98);
+}
+
+.tn-btn-primary:not(:disabled):hover {
+  box-shadow: 0 4px 15px rgba(0, 89, 213, 0.35);
+}
+
+/* Modal con entrada suave */
+[class*="nimbus--modal__overlay"] {
+  animation: modalFadeIn 0.2s ease !important;
+}
+
+[class*="nimbus--modal__container"] {
+  animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Spinners con pulso */
+[class*="nimbus--spinner"] {
+  animation: spinnerPulse 1.5s ease-in-out infinite !important;
+}
+
+@keyframes spinnerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Alertas con entrada */
+[class*="nimbus--alert"] {
+  animation: alertSlide 0.3s ease;
+}
+
+@keyframes alertSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Nav links con efecto */
+.nav-link {
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover:not(.active) {
+  transform: translateX(4px);
+}
+
+/* Selects con transición */
+[class*="nimbus--select__control"] {
+  transition: all 0.2s ease !important;
+}
+
+/* Empty states con fade in */
+.tn-empty-state {
+  animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Checkbox y toggle con animación */
+[class*="nimbus--toggle"] {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Focus visible para accesibilidad */
+:focus-visible {
+  outline: 2px solid var(--primary-interactive);
+  outline-offset: 2px;
+}
+
+/* Scroll suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(0, 89, 213, 0.2);
+  color: inherit;
+}
