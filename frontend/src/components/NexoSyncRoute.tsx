@@ -43,36 +43,52 @@ const NexoSyncRoute: React.FC<NexoSyncRouteProps> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [nexoInstance, setNexoInstance] = useState<NexoClient | null>(null);
   const [isInTiendaNube] = useState(() => isRunningInTiendaNube());
+  const [connectionStatus, setConnectionStatus] = useState("Iniciando...");
 
   // Inicializar Nexo y establecer conexión
   useEffect(() => {
+    console.log("Nexo: isInTiendaNube =", isInTiendaNube);
+    console.log("Nexo: CLIENT_ID =", CLIENT_ID ? `${CLIENT_ID.substring(0, 8)}...` : "(vacío)");
+    
     if (!isInTiendaNube) {
       // Si no estamos en TiendaNube, mostrar la app directamente
+      console.log("Nexo: No estamos en iframe, modo standalone");
+      setConnectionStatus("Modo standalone");
       setIsConnected(true);
       return;
     }
 
     if (!CLIENT_ID) {
       console.warn("VITE_TN_CLIENT_ID no configurado - Nexo no inicializado");
+      setConnectionStatus("Error: VITE_TN_CLIENT_ID no configurado");
       setIsConnected(true);
       return;
     }
 
+    setConnectionStatus("Creando instancia Nexo...");
+    console.log("Nexo: Creando instancia con clientId:", CLIENT_ID);
+    
     const instance = nexo.create({
       clientId: CLIENT_ID,
-      log: import.meta.env.DEV, // Solo log en desarrollo
+      log: true, // Habilitar logs para debugging
     });
     setNexoInstance(instance);
 
-    connect(instance)
+    setConnectionStatus("Conectando con Admin...");
+    console.log("Nexo: Intentando conectar...");
+    
+    connect(instance, 5000) // 5 segundos de timeout
       .then(() => {
         console.log("Nexo: Conectado con TiendaNube Admin");
-        setIsConnected(true);
+        setConnectionStatus("Conectado, notificando...");
         iAmReady(instance);
-        console.log("Nexo: App lista para mostrar");
+        console.log("Nexo: iAmReady enviado");
+        setConnectionStatus("Listo");
+        setIsConnected(true);
       })
       .catch((error) => {
         console.error("Nexo: Error conectando", error);
+        setConnectionStatus(`Error: ${error}`);
         // Mostrar la app de todos modos para no bloquear
         setIsConnected(true);
       });
@@ -116,6 +132,7 @@ const NexoSyncRoute: React.FC<NexoSyncRouteProps> = ({ children }) => {
       >
         <Spinner size="large" />
         <Text>Conectando con TiendaNube...</Text>
+        <Text fontSize="caption" color="neutral-textDisabled">{connectionStatus}</Text>
       </Box>
     );
   }
