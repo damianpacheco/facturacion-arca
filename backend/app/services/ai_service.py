@@ -1,5 +1,6 @@
 """Servicio de IA para análisis de ventas usando Google Gemini."""
 
+import os
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Optional
@@ -7,20 +8,20 @@ import google.generativeai as genai
 from sqlalchemy import select, func, extract
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_settings
 from app.models import Factura, Cliente, ItemFactura
-
-settings = get_settings()
 
 
 class AIService:
     """Servicio para generar insights de ventas con IA."""
 
-    def __init__(self):
-        self.model = None
-        if settings.gemini_api_key:
-            genai.configure(api_key=settings.gemini_api_key)
-            self.model = genai.GenerativeModel("gemini-1.5-flash")
+    def _get_model(self):
+        """Obtiene el modelo de Gemini, leyendo la API key dinámicamente."""
+        # Leer directamente de env para evitar cache
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        if not api_key:
+            return None
+        genai.configure(api_key=api_key)
+        return genai.GenerativeModel("gemini-1.5-flash")
 
     async def get_sales_stats(self, db: AsyncSession) -> dict:
         """Obtiene estadísticas de ventas para contexto del AI."""
@@ -150,7 +151,9 @@ class AIService:
 
     async def chat(self, question: str, db: AsyncSession) -> str:
         """Procesa una pregunta del usuario y genera una respuesta con contexto de ventas."""
-        if not self.model:
+        # Obtener modelo dinámicamente (lee API key en cada request)
+        model = self._get_model()
+        if not model:
             return "El asistente de IA no está configurado. Agregá tu API key de Google Gemini en la configuración."
 
         # Obtener estadísticas para contexto
@@ -199,7 +202,7 @@ INSTRUCCIONES:
 - Los montos están en pesos argentinos (ARS)"""
 
         try:
-            response = self.model.generate_content(
+            response = model.generate_content(
                 f"{system_prompt}\n\nPREGUNTA DEL USUARIO: {question}"
             )
             return response.text
