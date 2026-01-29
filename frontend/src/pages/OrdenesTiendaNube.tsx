@@ -16,6 +16,7 @@ import {
   Modal,
   Label,
   IconButton,
+  useToast,
 } from '@nimbus-ds/components'
 import {
   CheckCircleIcon,
@@ -85,6 +86,7 @@ export default function OrdenesTiendaNube() {
   const queryClient = useQueryClient()
   const justConnected = searchParams.get('connected') === 'true'
   const { isEmbedded } = useAppContext()
+  const { addToast } = useToast()
 
   // Filtros
   const [paymentStatusFilter] = useState<string>('paid')
@@ -138,10 +140,24 @@ export default function OrdenesTiendaNube() {
       })
       return response.data
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['tiendanube-orders'] })
       setInvoiceModalOpen(false)
       setSelectedOrder(null)
+      
+      // Mostrar toast de éxito
+      addToast({
+        id: String(Date.now()),
+        type: 'success',
+        text: `Factura ${data.numero_completo || ''} emitida correctamente`,
+      })
+    },
+    onError: (error) => {
+      addToast({
+        id: String(Date.now() + 1),
+        type: 'danger',
+        text: error.message || 'Error al emitir la factura',
+      })
     },
   })
 
@@ -265,7 +281,7 @@ export default function OrdenesTiendaNube() {
       </header>
 
       {justConnected && (
-        <div className="tn-page-content" style={{ paddingBottom: 0 }}>
+        <div className="tn-page-content" style={{ paddingBottom: 0, marginBottom: '1rem' }}>
           <Alert appearance="success" title="¡Tienda conectada!">
             Tu tienda de TiendaNube se ha conectado correctamente.
           </Alert>
