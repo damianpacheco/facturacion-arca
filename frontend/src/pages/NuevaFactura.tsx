@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import {
@@ -15,8 +15,9 @@ import {
   Label,
   IconButton,
 } from '@nimbus-ds/components'
-import { PlusCircleIcon, TrashIcon } from '@nimbus-ds/icons'
+import { PlusCircleIcon, TrashIcon, ChevronLeftIcon } from '@nimbus-ds/icons'
 import { getClientes, createFactura, getUltimoComprobante } from '../services/api'
+import { useAppContext } from '../contexts/AppContext'
 import { TIPOS_COMPROBANTE, ALICUOTAS_IVA, CONCEPTOS, type FacturaCreate } from '../types'
 
 interface FormData {
@@ -35,6 +36,7 @@ interface FormData {
 export default function NuevaFactura() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { isEmbedded } = useAppContext()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
@@ -69,7 +71,8 @@ export default function NuevaFactura() {
     onSuccess: (data) => {
       setSuccess(`Factura ${data.numero_completo} emitida correctamente. CAE: ${data.cae}`)
       queryClient.invalidateQueries({ queryKey: ['facturas'] })
-      setTimeout(() => navigate('/facturas'), 2000)
+      // En modo embedded, volver a las órdenes; en standalone, ir a facturas
+      setTimeout(() => navigate(isEmbedded ? '/' : '/facturas'), 2000)
     },
     onError: (err: Error) => {
       setError(err.message || 'Error al emitir la factura')
@@ -123,6 +126,14 @@ export default function NuevaFactura() {
 
   return (
     <Box display="flex" flexDirection="column" gap="6">
+      {isEmbedded && (
+        <Link to="/">
+          <Button appearance="neutral">
+            <ChevronLeftIcon size="small" />
+            Volver a Órdenes
+          </Button>
+        </Link>
+      )}
       <Title as="h1">Nueva Factura</Title>
 
       {error && (

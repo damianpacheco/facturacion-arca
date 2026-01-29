@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import {
   Title,
   Text,
@@ -21,8 +22,10 @@ import {
   ExclamationCircleIcon,
   StoreIcon,
   ExternalLinkIcon,
+  ChevronLeftIcon,
 } from '@nimbus-ds/icons'
 import api, { getEstadoARCA, getPuntosVenta, getTiposComprobante, getTiendaNubeInstallUrl } from '../services/api'
+import { useAppContext } from '../contexts/AppContext'
 
 interface StoreStatus {
   connected: boolean
@@ -96,8 +99,18 @@ export default function Configuracion() {
     updateTnConfig.mutate({ default_invoice_type: parseInt(value) })
   }
 
+  const { isEmbedded } = useAppContext()
+
   return (
     <Box display="flex" flexDirection="column" gap="6">
+      {isEmbedded && (
+        <Link to="/">
+          <Button appearance="neutral">
+            <ChevronLeftIcon size="small" />
+            Volver a Órdenes
+          </Button>
+        </Link>
+      )}
       <Title as="h1">Configuración</Title>
 
       {/* Estado de conexión ARCA */}

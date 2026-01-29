@@ -356,3 +356,14 @@ a [class*="nimbus--card"]:hover {
   padding: 0.125rem 0.5rem;
   border-radius: 4px;
 }
+
+/* Modo Embedded (iframe de TiendaNube) */
+.app-embedded {
+  padding: 1.5rem;
+  min-height: 100vh;
+  background: var(--content-bg);
+}
+
+.app-embedded > * {
+  animation: fadeIn 0.3s ease-out;
+}

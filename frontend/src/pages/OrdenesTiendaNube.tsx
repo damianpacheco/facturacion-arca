@@ -4,7 +4,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import {
   Title,
   Text,
@@ -28,8 +28,11 @@ import {
   StoreIcon,
   EyeIcon,
   DownloadIcon,
+  CogIcon,
+  PlusCircleIcon,
 } from '@nimbus-ds/icons'
 import api, { getTiendaNubeInstallUrl, getFacturaPdfUrl } from '../services/api'
+import { useAppContext } from '../contexts/AppContext'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -84,6 +87,7 @@ export default function OrdenesTiendaNube() {
   const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const justConnected = searchParams.get('connected') === 'true'
+  const { isEmbedded } = useAppContext()
 
   // Filtros
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('')
@@ -197,13 +201,31 @@ export default function OrdenesTiendaNube() {
   if (!storeStatus?.connected) {
     return (
       <Box display="flex" flexDirection="column" gap="6">
-        <Box>
-          <Title as="h1">Órdenes de TiendaNube</Title>
-          <Box marginTop="1">
-            <Text color="neutral-textLow">
-              Conecta tu tienda para facturar órdenes
-            </Text>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box>
+            <Title as="h1">{isEmbedded ? 'Órdenes' : 'Órdenes de TiendaNube'}</Title>
+            <Box marginTop="1">
+              <Text color="neutral-textLow">
+                Conecta tu tienda para facturar órdenes
+              </Text>
+            </Box>
           </Box>
+          {isEmbedded && (
+            <Box display="flex" gap="2">
+              <Link to="/configuracion">
+                <Button appearance="neutral">
+                  <CogIcon size="small" />
+                  Configuración
+                </Button>
+              </Link>
+              <Link to="/facturas/nueva">
+                <Button appearance="primary">
+                  <PlusCircleIcon size="small" />
+                  Nueva Factura
+                </Button>
+              </Link>
+            </Box>
+          )}
         </Box>
 
         <Card>
@@ -244,7 +266,7 @@ export default function OrdenesTiendaNube() {
     <Box display="flex" flexDirection="column" gap="6">
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box>
-          <Title as="h1">Órdenes de TiendaNube</Title>
+          <Title as="h1">{isEmbedded ? 'Órdenes' : 'Órdenes de TiendaNube'}</Title>
           <Box marginTop="1" display="flex" alignItems="center" gap="2">
             <Box
               width="8px"
@@ -257,10 +279,28 @@ export default function OrdenesTiendaNube() {
             </Text>
           </Box>
         </Box>
-        <Button appearance="neutral" onClick={() => refetchOrders()}>
-          <RedoIcon size="small" />
-          Actualizar
-        </Button>
+        <Box display="flex" gap="2">
+          {isEmbedded && (
+            <Link to="/configuracion">
+              <Button appearance="neutral">
+                <CogIcon size="small" />
+                Configuración
+              </Button>
+            </Link>
+          )}
+          <Button appearance="neutral" onClick={() => refetchOrders()}>
+            <RedoIcon size="small" />
+            Actualizar
+          </Button>
+          {isEmbedded && (
+            <Link to="/facturas/nueva">
+              <Button appearance="primary">
+                <PlusCircleIcon size="small" />
+                Nueva Factura
+              </Button>
+            </Link>
+          )}
+        </Box>
       </Box>
 
       {justConnected && (
