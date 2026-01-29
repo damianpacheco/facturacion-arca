@@ -59,9 +59,17 @@ class OrderListResponse(BaseModel):
     per_page: int
 
 
+class ClienteOverride(BaseModel):
+    """Datos personalizados del cliente para la factura."""
+    razon_social: str
+    cuit: str
+    condicion_iva: str = "Consumidor Final"
+
+
 class InvoiceOrderRequest(BaseModel):
     """Request para facturar una orden."""
     tipo_comprobante: Optional[int] = None  # Si no se especifica, usa el default
+    cliente_override: Optional[ClienteOverride] = None  # Datos personalizados del cliente
 
 
 class InvoiceOrderResponse(BaseModel):
@@ -261,12 +269,24 @@ async def invoice_order(
         # Determinar tipo de comprobante
         tipo_comprobante = request.tipo_comprobante or store.default_invoice_type
         
+        # Usar datos personalizados del cliente si se proporcionaron
+        if request.cliente_override:
+            cliente_data = {
+                "razon_social": request.cliente_override.razon_social,
+                "cuit": request.cliente_override.cuit,
+                "condicion_iva": request.cliente_override.condicion_iva,
+                "email": invoice_data["cliente"].get("email", ""),
+                "domicilio": invoice_data["cliente"].get("domicilio", ""),
+                "telefono": invoice_data["cliente"].get("telefono", ""),
+            }
+        else:
+            cliente_data = invoice_data["cliente"]
+        
         # Si el cliente es Responsable Inscripto, usar Factura A
-        if invoice_data["cliente"]["condicion_iva"] == "Responsable Inscripto":
+        if cliente_data["condicion_iva"] == "Responsable Inscripto":
             tipo_comprobante = 1  # Factura A
 
         # Buscar o crear cliente
-        cliente_data = invoice_data["cliente"]
         cuit = (cliente_data.get("cuit") or "").replace("-", "")
         
         if cuit:
