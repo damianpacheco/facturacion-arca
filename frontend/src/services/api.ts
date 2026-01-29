@@ -19,14 +19,27 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 segundos de timeout
 })
 
 // Interceptor para manejar errores y extraer el mensaje del backend
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Extraer el mensaje de error del backend
-    const message = error.response?.data?.detail || error.message || 'Error desconocido'
+    // Mejor manejo de errores
+    let message = 'Error desconocido'
+    
+    if (error.code === 'ECONNABORTED') {
+      message = 'La solicitud tardó demasiado. Intentá de nuevo.'
+    } else if (error.message === 'Network Error') {
+      message = 'Error de conexión. Verificá tu conexión a internet.'
+    } else if (error.response?.data?.detail) {
+      message = error.response.data.detail
+    } else if (error.message) {
+      message = error.message
+    }
+    
+    console.error('API Error:', { url: error.config?.url, status: error.response?.status, message })
     return Promise.reject(new Error(message))
   }
 )
