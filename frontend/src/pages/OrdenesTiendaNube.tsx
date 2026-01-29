@@ -25,14 +25,11 @@ import {
   EyeIcon,
   DownloadIcon,
   CogIcon,
-  PlusCircleIcon,
   InvoiceIcon,
-  GenerativeStarsIcon,
 } from '@nimbus-ds/icons'
 import api, { getTiendaNubeInstallUrl, getFacturaPdfUrl, getFactura } from '../services/api'
 import type { FacturaDetalle } from '../types'
 import { useAppContext } from '../contexts/AppContext'
-import SalesAssistant from '../components/SalesAssistant'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -88,9 +85,6 @@ export default function OrdenesTiendaNube() {
   const queryClient = useQueryClient()
   const justConnected = searchParams.get('connected') === 'true'
   const { isEmbedded } = useAppContext()
-
-  // Estado del asistente IA
-  const [aiPanelOpen, setAiPanelOpen] = useState(false)
 
   // Filtros
   const [paymentStatusFilter] = useState<string>('paid')
@@ -224,10 +218,6 @@ export default function OrdenesTiendaNube() {
                 <CogIcon size="small" />
                 Configuración
               </Link>
-              <Link to="/facturas/nueva" className="tn-btn tn-btn-primary">
-                <PlusCircleIcon size="small" />
-                Nueva Factura
-              </Link>
             </div>
           )}
         </header>
@@ -262,30 +252,15 @@ export default function OrdenesTiendaNube() {
         </div>
         <div className="tn-page-header-right">
           {isEmbedded && (
-            <>
-              <button 
-                className="tn-btn tn-btn-secondary"
-                onClick={() => setAiPanelOpen(true)}
-              >
-                <GenerativeStarsIcon size="small" />
-                Insights con IA
-              </button>
-              <Link to="/configuracion" className="tn-btn tn-btn-secondary">
-                <CogIcon size="small" />
-                Configuración
-              </Link>
-            </>
+            <Link to="/configuracion" className="tn-btn tn-btn-secondary">
+              <CogIcon size="small" />
+              Configuración
+            </Link>
           )}
           <button className="tn-btn tn-btn-secondary" onClick={() => refetchOrders()}>
             <RedoIcon size="small" />
             Actualizar
           </button>
-          {isEmbedded && (
-            <Link to="/facturas/nueva" className="tn-btn tn-btn-primary">
-              <PlusCircleIcon size="small" />
-              Nueva Factura
-            </Link>
-          )}
         </div>
       </header>
 
@@ -625,13 +600,6 @@ export default function OrdenesTiendaNube() {
         </Modal.Footer>
       </Modal>
 
-      {/* Asistente de ventas con IA (solo en modo iframe) */}
-      {isEmbedded && (
-        <SalesAssistant 
-          isOpen={aiPanelOpen} 
-          onClose={() => setAiPanelOpen(false)} 
-        />
-      )}
     </>
   )
 }

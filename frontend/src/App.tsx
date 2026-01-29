@@ -20,7 +20,6 @@ function App() {
           <Route path="/" element={<OrdenesTiendaNube />} />
           <Route path="/ordenes-tiendanube" element={<OrdenesTiendaNube />} />
           <Route path="/configuracion" element={<Configuracion />} />
-          <Route path="/facturas/nueva" element={<NuevaFactura />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

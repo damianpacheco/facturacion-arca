@@ -13,13 +13,32 @@ interface LayoutProps {
   children: React.ReactNode
 }
 
-const navItems = [
-  { path: '/', icon: HomeIcon, label: 'Dashboard' },
-  { path: '/facturas', icon: FileIcon, label: 'Facturas' },
-  { path: '/facturas/nueva', icon: PlusCircleIcon, label: 'Nueva Factura' },
-  { path: '/clientes', icon: UserIcon, label: 'Clientes' },
-  { path: '/ordenes-tiendanube', icon: StoreIcon, label: 'TiendaNube' },
-  { path: '/configuracion', icon: CogIcon, label: 'Configuración' },
+interface NavSection {
+  title?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  items: { path: string; icon: React.FC<any>; label: string }[]
+}
+
+const navSections: NavSection[] = [
+  {
+    items: [
+      { path: '/', icon: HomeIcon, label: 'Inicio' },
+    ]
+  },
+  {
+    title: 'Facturación',
+    items: [
+      { path: '/facturas', icon: FileIcon, label: 'Facturas' },
+      { path: '/facturas/nueva', icon: PlusCircleIcon, label: 'Nueva Factura' },
+      { path: '/clientes', icon: UserIcon, label: 'Clientes' },
+    ]
+  },
+  {
+    title: 'Integraciones',
+    items: [
+      { path: '/ordenes-tiendanube', icon: StoreIcon, label: 'TiendaNube' },
+    ]
+  },
 ]
 
 export default function Layout({ children }: LayoutProps) {
@@ -29,66 +48,61 @@ export default function Layout({ children }: LayoutProps) {
     <div className="app-layout">
       {/* Sidebar */}
       <aside className="app-sidebar">
-        {/* Header */}
+        {/* Header - Logo */}
         <div className="app-sidebar-header">
-          <Box display="flex" alignItems="center" gap="3">
-            <Box
-              width="40px"
-              height="40px"
-              borderRadius="2"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              backgroundColor="primary-interactive"
-            >
-              <FileIcon size="medium" />
-            </Box>
-            <Box>
-              <Text color="neutral-background" fontSize="base" fontWeight="bold">
-                Facturación
-              </Text>
-              <Text color="neutral-textDisabled" fontSize="caption">
-                Sistema ARCA
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <Box display="flex" alignItems="center" gap="2">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <rect width="32" height="32" rx="8" fill="#0059d5"/>
+                <path d="M8 10h16v2H8zm0 5h12v2H8zm0 5h14v2H8z" fill="white"/>
+              </svg>
+              <Text color="neutral-background" fontSize="highlight" fontWeight="bold">
+                FactuCheco
               </Text>
             </Box>
-          </Box>
+          </Link>
         </div>
 
         {/* Navigation */}
         <nav className="app-sidebar-nav">
-          <Box as="ul" display="flex" flexDirection="column" gap="1">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path
-              const Icon = item.icon
+          {navSections.map((section, sectionIndex) => (
+            <div key={sectionIndex} className="nav-section">
+              {section.title && (
+                <div className="nav-section-title">
+                  {section.title}
+                </div>
+              )}
+              <ul className="nav-list">
+                {section.items.map((item) => {
+                  const isActive = location.pathname === item.path
+                  const Icon = item.icon
 
-              return (
-                <li key={item.path} style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                  <Link
-                    to={item.path}
-                    className={`nav-link ${isActive ? 'active' : ''}`}
-                  >
-                    <Icon size="medium" />
-                    <span>{item.label}</span>
-                  </Link>
-                </li>
-              )
-            })}
-          </Box>
+                  return (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        className={`nav-link ${isActive ? 'active' : ''}`}
+                      >
+                        <Icon size="medium" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
-        {/* Footer */}
+        {/* Footer - Configuración */}
         <div className="app-sidebar-footer">
-          <Box display="flex" alignItems="center" justifyContent="center" gap="2">
-            <Box
-              width="8px"
-              height="8px"
-              borderRadius="full"
-              backgroundColor="warning-surface"
-            />
-            <Text color="neutral-textDisabled" fontSize="caption">
-              Modo Testing
-            </Text>
-          </Box>
+          <Link
+            to="/configuracion"
+            className={`nav-link ${location.pathname === '/configuracion' ? 'active' : ''}`}
+          >
+            <CogIcon size="medium" />
+            <span>Configuración</span>
+          </Link>
         </div>
       </aside>
 

@@ -58,30 +58,31 @@ body {
 
 .app-sidebar {
   width: var(--sidebar-width);
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  color: white;
+  background: #ffffff;
+  color: var(--text-primary);
   position: fixed;
   height: 100vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   z-index: 100;
+  border-right: 1px solid var(--border-color);
 }
 
 .app-sidebar-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .app-sidebar-nav {
   flex: 1;
-  padding: 1rem 0.75rem;
+  padding: 0.5rem 0;
+  overflow-y: auto;
 }
 
 .app-sidebar-footer {
-  padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .app-main {
@@ -92,29 +93,62 @@ body {
   background: var(--content-bg);
 }
 
+/* Secciones de navegación */
+.nav-section {
+  padding: 0.5rem 0;
+}
+
+.nav-section:not(:last-child) {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.nav-section-title {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-list li {
+  margin: 0;
+  padding: 0;
+}
+
 /* Navegación sidebar */
 .nav-link {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.625rem 0.875rem;
-  border-radius: 8px;
-  color: rgba(255, 255, 255, 0.65);
+  padding: 0.625rem 1.25rem;
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: all var(--transition-fast);
-  margin-bottom: 0.125rem;
+  transition: all 0.15s ease;
+  border-left: 3px solid transparent;
 }
 
 .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: white;
+  background-color: var(--neutral-surface);
+  color: var(--text-primary);
 }
 
 .nav-link.active {
-  background: #3b82f6;
-  color: white;
+  background-color: var(--primary-surface);
+  color: var(--primary-interactive);
+  border-left-color: var(--primary-interactive);
+}
+
+.nav-link svg {
+  flex-shrink: 0;
 }
 
 /* Modo Embedded (iframe TiendaNube) */
