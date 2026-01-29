@@ -276,14 +276,18 @@ export default function OrdenesTiendaNube() {
     })
   }
 
+  const [facturaError, setFacturaError] = useState<string | null>(null)
+
   const handleViewFactura = async (facturaId: number) => {
     setLoadingFactura(true)
+    setFacturaError(null)
     setViewFacturaModalOpen(true)
     try {
       const factura = await getFactura(facturaId)
       setSelectedFactura(factura)
     } catch (error) {
       console.error('Error al cargar factura:', error)
+      setFacturaError(error instanceof Error ? error.message : 'Error al cargar factura')
     } finally {
       setLoadingFactura(false)
     }
@@ -701,6 +705,7 @@ export default function OrdenesTiendaNube() {
         onDismiss={() => {
           setViewFacturaModalOpen(false)
           setSelectedFactura(null)
+          setFacturaError(null)
         }}
       >
         <Modal.Header title={selectedFactura ? `Factura ${selectedFactura.numero_completo}` : 'Cargando...'} />
@@ -709,6 +714,10 @@ export default function OrdenesTiendaNube() {
             <Box display="flex" justifyContent="center" padding="4">
               <Spinner size="large" />
             </Box>
+          ) : facturaError ? (
+            <Alert appearance="danger" title="Error">
+              {facturaError}
+            </Alert>
           ) : selectedFactura ? (
             <Box display="flex" flexDirection="column" gap="4">
               {/* Info general */}
