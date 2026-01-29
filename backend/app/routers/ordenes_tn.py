@@ -423,13 +423,17 @@ async def invoice_order(
             iva_detalle = []
 
         # Determinar tipo de documento del receptor
-        if cliente_data["condicion_iva"] == "Responsable Inscripto":
+        # CUIT genérico "00000000000" = Consumidor Final sin identificar
+        cuit_valido = cuit and len(cuit) == 11 and cuit != "00000000000" and int(cuit) > 0
+        
+        if cliente_data["condicion_iva"] == "Responsable Inscripto" and cuit_valido:
             tipo_doc = 80  # CUIT
-            nro_doc = int(cuit) if cuit else 0
-        elif cuit and len(cuit) == 11:
+            nro_doc = int(cuit)
+        elif cuit_valido:
             tipo_doc = 80  # CUIT
             nro_doc = int(cuit)
         else:
+            # Consumidor Final sin identificar
             tipo_doc = 99  # Sin identificar
             nro_doc = 0
 
