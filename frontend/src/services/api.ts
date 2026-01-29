@@ -125,4 +125,11 @@ export async function getPuntosVenta(): Promise<{ puntos_venta: unknown[] }> {
   return response.data
 }
 
+// ============ TIENDANUBE ============
+
+export function getTiendaNubeInstallUrl(): string {
+  const baseUrl = import.meta.env.VITE_API_URL || ''
+  return `${baseUrl}/tiendanube/install`
+}
+
 export default api

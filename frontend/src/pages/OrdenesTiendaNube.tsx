@@ -28,7 +28,7 @@ import {
   RedoIcon,
   StoreIcon,
 } from '@nimbus-ds/icons'
-import api from '../services/api'
+import api, { getTiendaNubeInstallUrl } from '../services/api'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -206,7 +206,7 @@ export default function OrdenesTiendaNube() {
                 </Text>
                 <Button
                   as="a"
-                  href="/api/tiendanube/install"
+                  href={getTiendaNubeInstallUrl()}
                   appearance="primary"
                 >
                   Conectar TiendaNube

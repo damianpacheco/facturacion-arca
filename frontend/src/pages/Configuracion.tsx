@@ -22,7 +22,7 @@ import {
   StoreIcon,
   ExternalLinkIcon,
 } from '@nimbus-ds/icons'
-import api, { getEstadoARCA, getPuntosVenta, getTiposComprobante } from '../services/api'
+import api, { getEstadoARCA, getPuntosVenta, getTiposComprobante, getTiendaNubeInstallUrl } from '../services/api'
 
 interface StoreStatus {
   connected: boolean
@@ -265,7 +265,7 @@ export default function Configuracion() {
               </Box>
               <Button
                 as="a"
-                href="/api/tiendanube/install"
+                href={getTiendaNubeInstallUrl()}
                 appearance="primary"
               >
                 Conectar TiendaNube
