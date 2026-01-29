@@ -15,6 +15,7 @@ import {
   Select,
   Modal,
   Label,
+  IconButton,
 } from '@nimbus-ds/components'
 import {
   CheckCircleIcon,
@@ -333,7 +334,7 @@ export default function OrdenesTiendaNube() {
                   <th>Total</th>
                   <th>Pago</th>
                   <th>Factura</th>
-                  <th>Acciones</th>
+                  <th style={{ textAlign: 'right' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -379,34 +380,31 @@ export default function OrdenesTiendaNube() {
                         <span className="tn-tag tn-tag-neutral">Pendiente</span>
                       )}
                     </td>
-                    <td>
-                      <Box display="flex" alignItems="center" gap="1" justifyContent="flex-end">
+                    <td style={{ textAlign: 'right' }}>
+                      <Box display="inline-flex" alignItems="center" gap="1">
                         {!order.invoiced && (
-                          <button 
-                            className="tn-icon-btn"
+                          <IconButton
+                            size="2rem"
+                            source={<InvoiceIcon size="small" />}
                             onClick={() => handleOpenInvoiceModal(order)}
-                            title="Facturar"
-                          >
-                            <InvoiceIcon size={16} />
-                          </button>
+                          />
                         )}
                         {order.factura_id && (
                           <>
-                            <button
-                              className="tn-icon-btn"
+                            <IconButton
+                              size="2rem"
+                              source={<EyeIcon size="small" />}
                               onClick={() => handleViewFactura(order.factura_id!)}
-                              title="Ver factura"
-                            >
-                              <EyeIcon size={16} />
-                            </button>
+                            />
                             <a
                               href={getFacturaPdfUrl(order.factura_id)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="tn-icon-btn"
-                              title="Descargar PDF"
                             >
-                              <DownloadIcon size={16} />
+                              <IconButton
+                                size="2rem"
+                                source={<DownloadIcon size="small" />}
+                              />
                             </a>
                           </>
                         )}
