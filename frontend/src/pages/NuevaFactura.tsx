@@ -15,7 +15,7 @@ import {
   Label,
   IconButton,
 } from '@nimbus-ds/components'
-import { PlusCircleIcon, TrashIcon, ChevronLeftIcon } from '@nimbus-ds/icons'
+import { PlusCircleIcon, TrashIcon } from '@nimbus-ds/icons'
 import { getClientes, createFactura, getUltimoComprobante } from '../services/api'
 import { useAppContext } from '../contexts/AppContext'
 import { TIPOS_COMPROBANTE, ALICUOTAS_IVA, CONCEPTOS, type FacturaCreate } from '../types'
@@ -125,16 +125,23 @@ export default function NuevaFactura() {
   const discriminaIva = [1, 2, 3, 6, 7, 8].includes(Number(tipoComprobante))
 
   return (
-    <Box display="flex" flexDirection="column" gap="6">
-      {isEmbedded && (
-        <Link to="/">
-          <Button appearance="neutral">
-            <ChevronLeftIcon size="small" />
-            Volver a Órdenes
-          </Button>
-        </Link>
-      )}
-      <Title as="h1">Nueva Factura</Title>
+    <>
+      <header className="tn-page-header">
+        <div className="tn-page-header-left">
+          {isEmbedded && (
+            <Link to="/" className="tn-back-button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Volver
+            </Link>
+          )}
+          <h1 className="tn-page-title">Nueva Factura</h1>
+        </div>
+      </header>
+
+      <div className="tn-page-content">
+      <Box display="flex" flexDirection="column" gap="6">
 
       {error && (
         <Alert appearance="danger" title="Error" onRemove={() => setError(null)}>
@@ -405,5 +412,7 @@ export default function NuevaFactura() {
         </Box>
       </form>
     </Box>
+      </div>
+    </>
   )
 }

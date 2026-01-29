@@ -1,29 +1,24 @@
 /**
  * Página para listar y facturar órdenes de TiendaNube.
+ * Diseño basado en la página de Ventas nativa de TiendaNube.
  */
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
 import {
-  Title,
   Text,
-  Card,
   Box,
-  Table,
-  Tag,
   Button,
   Alert,
   Spinner,
   Select,
-  IconButton,
   Modal,
   Label,
 } from '@nimbus-ds/components'
 import {
   CheckCircleIcon,
   SearchIcon,
-  InvoiceIcon,
   RedoIcon,
   StoreIcon,
   EyeIcon,
@@ -90,7 +85,7 @@ export default function OrdenesTiendaNube() {
   const { isEmbedded } = useAppContext()
 
   // Filtros
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('')
+  const [paymentStatusFilter] = useState<string>('paid')
   const [invoicedFilter, setInvoicedFilter] = useState<string>('')
 
   // Modal de facturación
@@ -143,8 +138,6 @@ export default function OrdenesTiendaNube() {
 
   const handleOpenInvoiceModal = (order: TiendaNubeOrder) => {
     setSelectedOrder(order)
-    // Si tiene CUIT válido (11 dígitos), sugerir Factura A
-    // Si no tiene identificación o es inválida, usar Factura B
     if (order.customer_identification && 
         order.customer_identification.trim() !== '' &&
         order.customer_identification.length === 11) {
@@ -165,300 +158,242 @@ export default function OrdenesTiendaNube() {
 
   const formatDate = (dateStr: string) => {
     try {
-      return format(new Date(dateStr), 'dd MMM yyyy HH:mm', { locale: es })
+      return format(new Date(dateStr), "dd MMM HH:mm", { locale: es })
     } catch {
       return dateStr
     }
   }
 
-  const formatCurrency = (amount: string, currency: string) => {
-    return `${currency} ${Number(amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
+  const formatCurrency = (amount: string) => {
+    return `$ ${Number(amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
   }
 
-  const getPaymentStatusTag = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <Tag appearance="success">Pagada</Tag>
-      case 'pending':
-        return <Tag appearance="warning">Pendiente</Tag>
-      case 'refunded':
-        return <Tag appearance="danger">Reembolsada</Tag>
-      default:
-        return <Tag>{status}</Tag>
-    }
+  // Contar órdenes por estado
+  const countByInvoiced = (invoiced: boolean) => {
+    return ordersData?.items.filter(o => o.invoiced === invoiced).length || 0
   }
 
-  // Si está cargando el estado de conexión
+  // Loading
   if (loadingStatus) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="300px">
+      <div className="tn-spinner-container">
         <Spinner size="large" />
-      </Box>
+      </div>
     )
   }
 
-  // Si no hay tienda conectada
+  // Sin tienda conectada
   if (!storeStatus?.connected) {
     return (
-      <Box display="flex" flexDirection="column" gap="6">
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Title as="h1">{isEmbedded ? 'Órdenes' : 'Órdenes de TiendaNube'}</Title>
-            <Box marginTop="1">
-              <Text color="neutral-textLow">
-                Conecta tu tienda para facturar órdenes
-              </Text>
-            </Box>
-          </Box>
+      <>
+        <header className="tn-page-header">
+          <div className="tn-page-header-left">
+            <h1 className="tn-page-title">Órdenes</h1>
+          </div>
           {isEmbedded && (
-            <Box display="flex" gap="2">
-              <Link to="/configuracion">
-                <Button appearance="neutral">
-                  <CogIcon size="small" />
-                  Configuración
-                </Button>
+            <div className="tn-page-header-right">
+              <Link to="/configuracion" className="tn-btn tn-btn-secondary">
+                <CogIcon size="small" />
+                Configuración
               </Link>
-              <Link to="/facturas/nueva">
-                <Button appearance="primary">
-                  <PlusCircleIcon size="small" />
-                  Nueva Factura
-                </Button>
+              <Link to="/facturas/nueva" className="tn-btn tn-btn-primary">
+                <PlusCircleIcon size="small" />
+                Nueva Factura
               </Link>
-            </Box>
+            </div>
           )}
-        </Box>
+        </header>
 
-        <Card>
-          <Card.Body>
-            <Box className="empty-state">
-              <Box
-                className="stat-card-icon"
-                backgroundColor="primary-surface"
-                marginBottom="4"
-              >
-                <StoreIcon size="large" />
-              </Box>
-              <Text fontWeight="bold" fontSize="base">
-                Conecta tu tienda de TiendaNube
-              </Text>
-              <Box marginTop="1">
-                <Text color="neutral-textLow" fontSize="caption" textAlign="center">
-                  Sincroniza tus órdenes y emití facturas automáticamente
-                </Text>
-              </Box>
+        <div className="tn-page-content">
+          <div className="tn-card">
+            <div className="tn-empty-state">
+              <StoreIcon size={48} className="tn-empty-state-icon" />
+              <h3 className="tn-empty-state-title">Conecta tu tienda de TiendaNube</h3>
+              <p className="tn-empty-state-text">Sincroniza tus órdenes y emití facturas automáticamente</p>
               <Box marginTop="4">
-                <Button
-                  as="a"
-                  href={getTiendaNubeInstallUrl()}
-                  appearance="primary"
-                >
+                <a href={getTiendaNubeInstallUrl()} className="tn-btn tn-btn-primary">
                   Conectar TiendaNube
-                </Button>
+                </a>
               </Box>
-            </Box>
-          </Card.Body>
-        </Card>
-      </Box>
+            </div>
+          </div>
+        </div>
+      </>
     )
   }
 
   return (
-    <Box display="flex" flexDirection="column" gap="6">
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Box>
-          <Title as="h1">{isEmbedded ? 'Órdenes' : 'Órdenes de TiendaNube'}</Title>
-          <Box marginTop="1" display="flex" alignItems="center" gap="2">
-            <Box
-              width="8px"
-              height="8px"
-              borderRadius="full"
-              backgroundColor="success-interactive"
-            />
-            <Text color="neutral-textLow" fontSize="caption">
-              {storeStatus.store_name}
-            </Text>
-          </Box>
-        </Box>
-        <Box display="flex" gap="2">
+    <>
+      {/* Header */}
+      <header className="tn-page-header">
+        <div className="tn-page-header-left">
+          <div className="tn-page-title-with-count">
+            <h1 className="tn-page-title">Órdenes</h1>
+            <span className="tn-page-count">{ordersData?.total || 0} órdenes</span>
+          </div>
+        </div>
+        <div className="tn-page-header-right">
           {isEmbedded && (
-            <Link to="/configuracion">
-              <Button appearance="neutral">
-                <CogIcon size="small" />
-                Configuración
-              </Button>
+            <Link to="/configuracion" className="tn-btn tn-btn-secondary">
+              <CogIcon size="small" />
+              Configuración
             </Link>
           )}
-          <Button appearance="neutral" onClick={() => refetchOrders()}>
+          <button className="tn-btn tn-btn-secondary" onClick={() => refetchOrders()}>
             <RedoIcon size="small" />
             Actualizar
-          </Button>
+          </button>
           {isEmbedded && (
-            <Link to="/facturas/nueva">
-              <Button appearance="primary">
-                <PlusCircleIcon size="small" />
-                Nueva Factura
-              </Button>
+            <Link to="/facturas/nueva" className="tn-btn tn-btn-primary">
+              <PlusCircleIcon size="small" />
+              Nueva Factura
             </Link>
           )}
-        </Box>
-      </Box>
+        </div>
+      </header>
 
       {justConnected && (
-        <Box marginTop="4">
+        <div className="tn-page-content" style={{ paddingBottom: 0 }}>
           <Alert appearance="success" title="¡Tienda conectada!">
             Tu tienda de TiendaNube se ha conectado correctamente.
           </Alert>
-        </Box>
+        </div>
       )}
 
-      {/* Filtros */}
-      <Box marginTop="6">
-        <Card>
-          <Card.Body>
-            <Box display="flex" gap="4" flexWrap="wrap">
-              <Box width="200px">
-                <Label htmlFor="payment-filter">Estado de pago</Label>
-                <Select
-                  id="payment-filter"
-                  name="payment-filter"
-                  value={paymentStatusFilter}
-                  onChange={(e) => setPaymentStatusFilter(e.target.value)}
-                >
-                  <Select.Option label="Todos" value="" />
-                  <Select.Option label="Pagadas" value="paid" />
-                  <Select.Option label="Pendientes" value="pending" />
-                  <Select.Option label="Reembolsadas" value="refunded" />
-                </Select>
-              </Box>
-              <Box width="200px">
-                <Label htmlFor="invoiced-filter">Facturación</Label>
-                <Select
-                  id="invoiced-filter"
-                  name="invoiced-filter"
-                  value={invoicedFilter}
-                  onChange={(e) => setInvoicedFilter(e.target.value)}
-                >
-                  <Select.Option label="Todas" value="" />
-                  <Select.Option label="Sin facturar" value="false" />
-                  <Select.Option label="Facturadas" value="true" />
-                </Select>
-              </Box>
-            </Box>
-          </Card.Body>
-        </Card>
-      </Box>
+      <div className="tn-page-content">
+        <div className="tn-table-wrapper">
+          {/* Filtros rápidos */}
+          <div className="tn-quick-filters">
+            <button 
+              className={`tn-quick-filter ${invoicedFilter === '' ? 'active' : ''}`}
+              onClick={() => setInvoicedFilter('')}
+            >
+              Todas
+            </button>
+            <button 
+              className={`tn-quick-filter ${invoicedFilter === 'false' ? 'active' : ''}`}
+              onClick={() => setInvoicedFilter('false')}
+            >
+              Sin facturar
+              <span className="tn-quick-filter-badge">{countByInvoiced(false)}</span>
+            </button>
+            <button 
+              className={`tn-quick-filter ${invoicedFilter === 'true' ? 'active' : ''}`}
+              onClick={() => setInvoicedFilter('true')}
+            >
+              Facturadas
+              <span className="tn-quick-filter-badge">{countByInvoiced(true)}</span>
+            </button>
+          </div>
 
-      {/* Lista de órdenes */}
-      <Box marginTop="4">
-        <Card>
-          <Card.Body padding="none">
-            {loadingOrders ? (
-              <Box display="flex" justifyContent="center" padding="8">
-                <Spinner size="large" />
-              </Box>
-            ) : ordersError ? (
-              <Box padding="4">
-                <Alert appearance="danger" title="Error cargando órdenes">
-                  {String(ordersError)}
-                </Alert>
-              </Box>
-            ) : ordersData?.items.length === 0 ? (
-              <Box className="empty-state">
-                <SearchIcon size="large" className="empty-state-icon" />
-                <Box marginTop="2">
-                  <Text fontWeight="medium">No se encontraron órdenes</Text>
-                </Box>
-                <Text color="neutral-textLow" fontSize="caption">
-                  Probá ajustando los filtros o esperá nuevas ventas
-                </Text>
-              </Box>
-            ) : (
-              <Table>
-                <Table.Head>
-                  <Table.Row>
-                    <Table.Cell as="th">Orden</Table.Cell>
-                    <Table.Cell as="th">Fecha</Table.Cell>
-                    <Table.Cell as="th">Cliente</Table.Cell>
-                    <Table.Cell as="th">Total</Table.Cell>
-                    <Table.Cell as="th">Pago</Table.Cell>
-                    <Table.Cell as="th">Factura</Table.Cell>
-                    <Table.Cell as="th">Acciones</Table.Cell>
-                  </Table.Row>
-                </Table.Head>
-                <Table.Body>
-                  {ordersData?.items.map((order) => (
-                    <Table.Row key={order.id}>
-                      <Table.Cell>
-                        <Text fontWeight="bold">#{order.number}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text fontSize="caption">{formatDate(order.created_at)}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Box>
-                          <Text>{order.customer_name || 'Sin nombre'}</Text>
-                          {order.customer_identification && (
-                            <Text fontSize="caption" color="neutral-textLow">
-                              {order.customer_identification}
-                            </Text>
-                          )}
+          {/* Tabla */}
+          {loadingOrders ? (
+            <div className="tn-spinner-container">
+              <Spinner size="large" />
+            </div>
+          ) : ordersError ? (
+            <Box padding="4">
+              <Alert appearance="danger" title="Error cargando órdenes">
+                {String(ordersError)}
+              </Alert>
+            </Box>
+          ) : ordersData?.items.length === 0 ? (
+            <div className="tn-empty-state">
+              <SearchIcon size={48} className="tn-empty-state-icon" />
+              <h3 className="tn-empty-state-title">No se encontraron órdenes</h3>
+              <p className="tn-empty-state-text">Probá ajustando los filtros o esperá nuevas ventas</p>
+            </div>
+          ) : (
+            <table className="tn-table">
+              <thead>
+                <tr>
+                  <th>Orden</th>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Total</th>
+                  <th>Pago</th>
+                  <th>Factura</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {ordersData?.items.map((order) => (
+                  <tr key={order.id}>
+                    <td>
+                      <span className="tn-link" style={{ fontWeight: 600 }}>#{order.number}</span>
+                    </td>
+                    <td>
+                      <Text fontSize="caption" color="neutral-textLow">
+                        {formatDate(order.created_at)}
+                      </Text>
+                    </td>
+                    <td>
+                      {order.customer_name ? (
+                        <span className="tn-link">{order.customer_name}</span>
+                      ) : (
+                        <Text color="neutral-textLow">No Informado</Text>
+                      )}
+                    </td>
+                    <td>
+                      <Text fontWeight="medium">{formatCurrency(order.total)}</Text>
+                    </td>
+                    <td>
+                      {order.payment_status === 'paid' ? (
+                        <span className="tn-tag tn-tag-success">
+                          <CheckCircleIcon size={12} />
+                          Recibido
+                        </span>
+                      ) : order.payment_status === 'pending' ? (
+                        <span className="tn-tag tn-tag-warning">Pendiente</span>
+                      ) : (
+                        <span className="tn-tag tn-tag-neutral">{order.payment_status}</span>
+                      )}
+                    </td>
+                    <td>
+                      {order.invoiced ? (
+                        <Box display="flex" alignItems="center" gap="1">
+                          <CheckCircleIcon size={14} />
+                          <Text fontSize="caption">{order.factura_numero}</Text>
                         </Box>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text fontWeight="bold">
-                          {formatCurrency(order.total, order.currency)}
-                        </Text>
-                      </Table.Cell>
-                      <Table.Cell>{getPaymentStatusTag(order.payment_status)}</Table.Cell>
-                      <Table.Cell>
-                        {order.invoiced ? (
-                          <Box display="flex" alignItems="center" gap="1">
-                            <CheckCircleIcon size="small" />
-                            <Text fontSize="caption">{order.factura_numero}</Text>
-                          </Box>
-                        ) : (
-                          <Tag appearance="neutral">Pendiente</Tag>
+                      ) : (
+                        <span className="tn-tag tn-tag-neutral">Pendiente</span>
+                      )}
+                    </td>
+                    <td>
+                      <Box display="flex" alignItems="center" gap="1" justifyContent="flex-end">
+                        {!order.invoiced && (
+                          <button 
+                            className="tn-icon-btn"
+                            onClick={() => handleOpenInvoiceModal(order)}
+                            title="Facturar"
+                          >
+                            <PlusCircleIcon size={16} />
+                          </button>
                         )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Box display="flex" gap="1">
-                          {!order.invoiced && (
-                            <IconButton
-                              source={<InvoiceIcon size="small" />}
-                              size="2rem"
-                              onClick={() => handleOpenInvoiceModal(order)}
-                            />
-                          )}
-                          {order.factura_id && (
-                            <>
-                              <a href={`/facturas?id=${order.factura_id}`}>
-                                <IconButton
-                                  source={<EyeIcon size="small" />}
-                                  size="2rem"
-                                />
-                              </a>
-                              <a
-                                href={getFacturaPdfUrl(order.factura_id)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <IconButton
-                                  source={<DownloadIcon size="small" />}
-                                  size="2rem"
-                                />
-                              </a>
-                            </>
-                          )}
-                        </Box>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table>
-            )}
-          </Card.Body>
-        </Card>
-      </Box>
+                        {order.factura_id && (
+                          <>
+                            <Link to={`/facturas?id=${order.factura_id}`} className="tn-icon-btn">
+                              <EyeIcon size={16} />
+                            </Link>
+                            <a
+                              href={getFacturaPdfUrl(order.factura_id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="tn-icon-btn"
+                            >
+                              <DownloadIcon size={16} />
+                            </a>
+                          </>
+                        )}
+                      </Box>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
 
       {/* Modal de facturación */}
       <Modal open={invoiceModalOpen} onDismiss={() => setInvoiceModalOpen(false)}>
@@ -473,7 +408,6 @@ export default function OrdenesTiendaNube() {
           )}
 
           <Box display="flex" flexDirection="column" gap="4">
-            {/* Alerta informativa si no hay identificación */}
             {(!selectedOrder?.customer_identification || 
               selectedOrder.customer_identification.trim() === '') && (
               <Alert appearance="primary" title="Facturación a Consumidor Final">
@@ -504,7 +438,7 @@ export default function OrdenesTiendaNube() {
             <Box>
               <Text fontWeight="bold">Total:</Text>
               <Text>
-                {selectedOrder && formatCurrency(selectedOrder.total, selectedOrder.currency)}
+                {selectedOrder && formatCurrency(selectedOrder.total)}
               </Text>
             </Box>
 
@@ -517,7 +451,6 @@ export default function OrdenesTiendaNube() {
                 onChange={(e) => setSelectedTipoComprobante(e.target.value)}
               >
                 {TIPO_COMPROBANTE_OPTIONS.filter((opt) => {
-                  // Si no hay identificación, no permitir Factura A
                   if (!selectedOrder?.customer_identification || 
                       selectedOrder.customer_identification.trim() === '') {
                     return opt.value !== '1'
@@ -550,6 +483,6 @@ export default function OrdenesTiendaNube() {
           </Button>
         </Modal.Footer>
       </Modal>
-    </Box>
+    </>
   )
 }

@@ -1,11 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
-  Title,
   Text,
-  Card,
   Box,
-  Table,
   Tag,
   Alert,
   Spinner,
@@ -15,14 +12,10 @@ import {
   Label,
 } from '@nimbus-ds/components'
 import {
-  CogIcon,
-  FileIcon,
-  LockIcon,
+  ChevronLeftIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
-  StoreIcon,
   ExternalLinkIcon,
-  ChevronLeftIcon,
 } from '@nimbus-ds/icons'
 import api, { getEstadoARCA, getPuntosVenta, getTiposComprobante, getTiendaNubeInstallUrl } from '../services/api'
 import { useAppContext } from '../contexts/AppContext'
@@ -44,6 +37,7 @@ const TIPO_COMPROBANTE_OPTIONS = [
 
 export default function Configuracion() {
   const queryClient = useQueryClient()
+  const { isEmbedded } = useAppContext()
 
   const { data: estadoArca, isLoading: loadingEstado } = useQuery({
     queryKey: ['arca-estado'],
@@ -99,29 +93,26 @@ export default function Configuracion() {
     updateTnConfig.mutate({ default_invoice_type: parseInt(value) })
   }
 
-  const { isEmbedded } = useAppContext()
-
   return (
-    <Box display="flex" flexDirection="column" gap="6">
-      {isEmbedded && (
-        <Link to="/">
-          <Button appearance="neutral">
-            <ChevronLeftIcon size="small" />
-            Volver a Órdenes
-          </Button>
-        </Link>
-      )}
-      <Title as="h1">Configuración</Title>
+    <>
+      {/* Header */}
+      <header className="tn-page-header">
+        <div className="tn-page-header-left">
+          {isEmbedded && (
+            <Link to="/" className="tn-back-button">
+              <ChevronLeftIcon size={16} />
+              Volver
+            </Link>
+          )}
+          <h1 className="tn-page-title">Configuración</h1>
+        </div>
+      </header>
 
-      {/* Estado de conexión ARCA */}
-      <Card>
-        <Card.Header>
-          <Box display="flex" alignItems="center" gap="3">
-            <CogIcon size="medium" />
-            <Title as="h3">Conexión con ARCA</Title>
-          </Box>
-        </Card.Header>
-        <Card.Body>
+      <div className="tn-page-content">
+        {/* Conexión ARCA */}
+        <div className="tn-form-section">
+          <h3 className="tn-form-section-title">Conexión con ARCA</h3>
+          
           {loadingEstado ? (
             <Box display="flex" alignItems="center" gap="2">
               <Spinner size="small" />
@@ -130,31 +121,24 @@ export default function Configuracion() {
           ) : estadoArca?.estado === 'conectado' ? (
             <Box display="flex" flexDirection="column" gap="4">
               <Box display="flex" alignItems="center" gap="2">
-                <CheckCircleIcon size="medium" />
+                <CheckCircleIcon size={16} />
                 <Text fontWeight="medium" color="success-textLow">
                   Conectado correctamente
                 </Text>
               </Box>
 
-              <Box
-                padding="4"
-                backgroundColor="neutral-surface"
-                borderRadius="2"
-                display="flex"
-                gap="4"
-                flexWrap="wrap"
-              >
-                <Box flex="1" minWidth="120px">
+              <Box display="flex" gap="6" flexWrap="wrap">
+                <Box>
                   <Text fontSize="caption" color="neutral-textLow">Modo</Text>
                   <Text fontWeight="medium">
                     {estadoArca.modo.charAt(0).toUpperCase() + estadoArca.modo.slice(1)}
                   </Text>
                 </Box>
-                <Box flex="1" minWidth="120px">
+                <Box>
                   <Text fontSize="caption" color="neutral-textLow">CUIT</Text>
                   <Text fontWeight="medium">{estadoArca.cuit}</Text>
                 </Box>
-                <Box flex="1" minWidth="120px">
+                <Box>
                   <Text fontSize="caption" color="neutral-textLow">Punto de Venta</Text>
                   <Text fontWeight="medium">{estadoArca.punto_venta}</Text>
                 </Box>
@@ -162,24 +146,18 @@ export default function Configuracion() {
             </Box>
           ) : (
             <Box display="flex" alignItems="center" gap="2">
-              <ExclamationCircleIcon size="medium" />
+              <ExclamationCircleIcon size={16} />
               <Text color="warning-textLow">
                 {estadoArca?.mensaje || 'No se pudo conectar con ARCA'}
               </Text>
             </Box>
           )}
-        </Card.Body>
-      </Card>
+        </div>
 
-      {/* Integración TiendaNube */}
-      <Card>
-        <Card.Header>
-          <Box display="flex" alignItems="center" gap="3">
-            <StoreIcon size="medium" />
-            <Title as="h3">Integración TiendaNube</Title>
-          </Box>
-        </Card.Header>
-        <Card.Body>
+        {/* Integración TiendaNube */}
+        <div className="tn-form-section">
+          <h3 className="tn-form-section-title">Integración TiendaNube</h3>
+          
           {loadingTn ? (
             <Box display="flex" alignItems="center" gap="2">
               <Spinner size="small" />
@@ -188,38 +166,37 @@ export default function Configuracion() {
           ) : tnStatus?.connected ? (
             <Box display="flex" flexDirection="column" gap="4">
               <Box display="flex" alignItems="center" gap="2">
-                <CheckCircleIcon size="medium" />
+                <CheckCircleIcon size={16} />
                 <Text fontWeight="medium" color="success-textLow">
                   Tienda conectada
                 </Text>
               </Box>
 
-              <Box
-                padding="4"
-                backgroundColor="neutral-surface"
-                borderRadius="2"
-                display="flex"
-                gap="4"
-                flexWrap="wrap"
-              >
-                <Box flex="1" minWidth="150px">
+              <Box display="flex" gap="6" flexWrap="wrap">
+                <Box>
                   <Text fontSize="caption" color="neutral-textLow">Tienda</Text>
                   <Text fontWeight="medium">{tnStatus.store_name}</Text>
                 </Box>
-                <Box flex="1" minWidth="150px">
+                <Box>
                   <Text fontSize="caption" color="neutral-textLow">URL</Text>
                   <Box display="flex" alignItems="center" gap="1">
                     <Text fontWeight="medium">{tnStatus.store_url}</Text>
                     <a href={tnStatus.store_url || ''} target="_blank" rel="noopener noreferrer">
-                      <ExternalLinkIcon size="small" />
+                      <ExternalLinkIcon size={14} />
                     </a>
                   </Box>
                 </Box>
               </Box>
 
               {/* Configuración de facturación */}
-              <Box display="flex" flexDirection="column" gap="4" marginTop="2">
-                <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box 
+                borderTopWidth="1" 
+                borderColor="neutral-surfaceHighlight" 
+                borderStyle="solid" 
+                paddingTop="4"
+                marginTop="2"
+              >
+                <Box display="flex" alignItems="center" justifyContent="space-between" marginBottom="4">
                   <Box>
                     <Text fontWeight="medium">Facturación automática</Text>
                     <Text fontSize="caption" color="neutral-textLow">
@@ -258,7 +235,13 @@ export default function Configuracion() {
               </Box>
 
               {/* Botón desconectar */}
-              <Box marginTop="4" borderTopWidth="1" borderStyle="solid" borderColor="neutral-surfaceHighlight" paddingTop="4">
+              <Box 
+                marginTop="4" 
+                borderTopWidth="1" 
+                borderStyle="solid" 
+                borderColor="neutral-surfaceHighlight" 
+                paddingTop="4"
+              >
                 <Button
                   appearance="danger"
                   onClick={() => disconnectTn.mutate()}
@@ -269,133 +252,90 @@ export default function Configuracion() {
               </Box>
             </Box>
           ) : (
-            <Box display="flex" flexDirection="column" gap="4" alignItems="flex-start">
+            <Box display="flex" flexDirection="column" gap="3">
               <Box display="flex" alignItems="center" gap="2">
-                <ExclamationCircleIcon size="medium" />
+                <ExclamationCircleIcon size={16} />
                 <Text color="neutral-textLow">
                   No hay tienda de TiendaNube conectada
                 </Text>
               </Box>
-              <Button
-                as="a"
-                href={getTiendaNubeInstallUrl()}
-                appearance="primary"
-              >
-                Conectar TiendaNube
-              </Button>
+              <Box>
+                <a href={getTiendaNubeInstallUrl()} className="tn-btn tn-btn-primary">
+                  Conectar TiendaNube
+                </a>
+              </Box>
               <Text fontSize="caption" color="neutral-textLow">
                 Conecta tu tienda para facturar órdenes automáticamente
               </Text>
             </Box>
           )}
-        </Card.Body>
-      </Card>
+        </div>
 
-      {/* Puntos de Venta */}
-      {puntosVenta && (
-        <Card>
-          <Card.Header>
-            <Box display="flex" alignItems="center" gap="3">
-              <FileIcon size="medium" />
-              <Title as="h3">Puntos de Venta Habilitados</Title>
+        {/* Puntos de Venta */}
+        {puntosVenta && puntosVenta.puntos_venta?.length > 0 && (
+          <div className="tn-form-section">
+            <h3 className="tn-form-section-title">Puntos de Venta Habilitados</h3>
+            <Box display="flex" flexDirection="column" gap="2">
+              {(puntosVenta.puntos_venta as Array<{ Nro: number; EmisionTipo: string; Bloqueado: string }>).map((pv) => (
+                <Box 
+                  key={pv.Nro} 
+                  display="flex" 
+                  justifyContent="space-between" 
+                  alignItems="center"
+                  padding="3"
+                  backgroundColor="neutral-surface"
+                  borderRadius="2"
+                >
+                  <Box>
+                    <Text fontWeight="medium">{String(pv.Nro).padStart(4, '0')}</Text>
+                    <Text fontSize="caption" color="neutral-textLow">{pv.EmisionTipo}</Text>
+                  </Box>
+                  <Tag appearance={pv.Bloqueado === 'N' ? 'success' : 'danger'}>
+                    {pv.Bloqueado === 'N' ? 'Activo' : 'Bloqueado'}
+                  </Tag>
+                </Box>
+              ))}
             </Box>
-          </Card.Header>
-          <Card.Body padding="none">
-            {puntosVenta.puntos_venta?.length ? (
-              <Table>
-                <Table.Head>
-                  <Table.Row>
-                    <Table.Cell as="th">Número</Table.Cell>
-                    <Table.Cell as="th">Tipo</Table.Cell>
-                    <Table.Cell as="th">Estado</Table.Cell>
-                  </Table.Row>
-                </Table.Head>
-                <Table.Body>
-                  {(puntosVenta.puntos_venta as Array<{ Nro: number; EmisionTipo: string; Bloqueado: string }>).map((pv) => (
-                    <Table.Row key={pv.Nro}>
-                      <Table.Cell>
-                        <Text fontSize="caption">{String(pv.Nro).padStart(4, '0')}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text>{pv.EmisionTipo}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Tag appearance={pv.Bloqueado === 'N' ? 'success' : 'danger'}>
-                          {pv.Bloqueado === 'N' ? 'Activo' : 'Bloqueado'}
-                        </Tag>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table>
+          </div>
+        )}
+
+        {/* Certificados */}
+        <div className="tn-form-section">
+          <h3 className="tn-form-section-title">Certificados Digitales</h3>
+          
+          <Box marginBottom="4">
+            {estadoArca?.modo === 'testing' ? (
+              <Text>
+                <Text as="span" fontWeight="medium" color="primary-interactive">
+                  Modo Testing:
+                </Text>{' '}
+                Estás usando el CUIT de demostración de ARCA.
+                Las facturas emitidas no tienen validez fiscal.
+              </Text>
             ) : (
-              <Box padding="4">
-                <Text color="neutral-textLow">No hay puntos de venta habilitados</Text>
-              </Box>
+              <Text>
+                <Text as="span" fontWeight="medium" color="success-textLow">
+                  Modo Producción:
+                </Text>{' '}
+                Las facturas emitidas tienen validez fiscal.
+              </Text>
             )}
-          </Card.Body>
-        </Card>
-      )}
-
-      {/* Información de certificados */}
-      <Card>
-        <Card.Header>
-          <Box display="flex" alignItems="center" gap="3">
-            <LockIcon size="medium" />
-            <Title as="h3">Certificados Digitales</Title>
           </Box>
-        </Card.Header>
-        <Card.Body>
-          <Box display="flex" flexDirection="column" gap="4">
-            <Text>
-              {estadoArca?.modo === 'testing' ? (
-                <>
-                  <Text as="span" fontWeight="medium" color="primary-interactive">
-                    Modo Testing:
-                  </Text>{' '}
-                  Estás usando el CUIT de demostración de ARCA.
-                  Las facturas emitidas no tienen validez fiscal.
-                </>
-              ) : (
-                <>
-                  <Text as="span" fontWeight="medium" color="success-textLow">
-                    Modo Producción:
-                  </Text>{' '}
-                  Las facturas emitidas tienen validez fiscal.
-                </>
-              )}
-            </Text>
 
-            <Alert appearance="primary" title="Para pasar a producción necesitás:">
-              <Box as="ol" display="flex" flexDirection="column" gap="1" paddingLeft="4">
-                <li>
-                  <Text fontSize="caption">1. Generar un certificado digital desde ARCA</Text>
-                </li>
-                <li>
-                  <Text fontSize="caption">2. Crear una Clave Privada (.key)</Text>
-                </li>
-                <li>
-                  <Text fontSize="caption">3. Colocar ambos archivos en la carpeta backend/certs/</Text>
-                </li>
-                <li>
-                  <Text fontSize="caption">4. Configurar las variables de entorno en .env</Text>
-                </li>
-              </Box>
-            </Alert>
-          </Box>
-        </Card.Body>
-      </Card>
-
-      {/* Tipos de comprobante disponibles */}
-      {tiposComprobante && (
-        <Card>
-          <Card.Header>
-            <Box display="flex" alignItems="center" gap="3">
-              <CogIcon size="medium" />
-              <Title as="h3">Tipos de Comprobante Disponibles</Title>
+          <Alert appearance="primary" title="Para pasar a producción necesitás:">
+            <Box display="flex" flexDirection="column" gap="1">
+              <Text fontSize="caption">1. Generar un certificado digital desde ARCA</Text>
+              <Text fontSize="caption">2. Crear una Clave Privada (.key)</Text>
+              <Text fontSize="caption">3. Colocar ambos archivos en la carpeta backend/certs/</Text>
+              <Text fontSize="caption">4. Configurar las variables de entorno en .env</Text>
             </Box>
-          </Card.Header>
-          <Card.Body>
+          </Alert>
+        </div>
+
+        {/* Tipos de comprobante */}
+        {tiposComprobante && (
+          <div className="tn-form-section">
+            <h3 className="tn-form-section-title">Tipos de Comprobante Disponibles</h3>
             <Box display="flex" gap="2" flexWrap="wrap">
               {(tiposComprobante.tipos as Array<{ Id: number; Desc: string }>)
                 .filter((t) => [1, 3, 6, 8, 11, 13].includes(t.Id))
@@ -405,8 +345,7 @@ export default function Configuracion() {
                     padding="3"
                     backgroundColor="neutral-surface"
                     borderRadius="2"
-                    minWidth="150px"
-                    flex="1"
+                    minWidth="140px"
                   >
                     <Text fontSize="caption" color="neutral-textLow">
                       Código {tipo.Id}
@@ -417,9 +356,9 @@ export default function Configuracion() {
                   </Box>
                 ))}
             </Box>
-          </Card.Body>
-        </Card>
-      )}
-    </Box>
+          </div>
+        )}
+      </div>
+    </>
   )
 }
