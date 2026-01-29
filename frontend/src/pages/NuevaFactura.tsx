@@ -267,12 +267,9 @@ export default function NuevaFactura() {
                   {fields.map((field, index) => (
                     <Box
                       key={field.id}
-                      padding="4"
-                      backgroundColor="neutral-surface"
-                      borderRadius="2"
                       display="flex"
                       gap="3"
-                      alignItems="flex-start"
+                      alignItems="flex-end"
                       flexWrap="wrap"
                     >
                       <Box flex="1" minWidth="200px">
@@ -325,14 +322,12 @@ export default function NuevaFactura() {
                           />
                         </Box>
                       )}
-                      <Box paddingTop="6">
-                        <IconButton
-                          size="2rem"
-                          source={<TrashIcon size="small" />}
-                          onClick={() => fields.length > 1 && remove(index)}
-                          disabled={fields.length === 1}
-                        />
-                      </Box>
+                      <IconButton
+                        size="2rem"
+                        source={<TrashIcon size="small" />}
+                        onClick={() => fields.length > 1 && remove(index)}
+                        disabled={fields.length === 1}
+                      />
                     </Box>
                   ))}
                 </Box>
@@ -375,12 +370,7 @@ export default function NuevaFactura() {
                           ${totales.iva.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                         </Text>
                       </Box>
-                      <Box
-                        borderTopWidth="1"
-                        borderColor="neutral-surfaceHighlight"
-                        borderStyle="solid"
-                        paddingTop="3"
-                      />
+                      <hr className="tn-separator" style={{ margin: '0.5rem 0' }} />
                     </>
                   )}
                   <Box display="flex" justifyContent="space-between">
