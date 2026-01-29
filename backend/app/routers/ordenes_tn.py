@@ -432,7 +432,9 @@ async def invoice_order(
             await tn_service.close()
         except Exception as tn_error:
             # No fallar si no se pueden guardar los datos en TiendaNube
+            import traceback
             print(f"Advertencia: No se pudieron guardar datos en TiendaNube: {tn_error}")
+            print(f"Traceback: {traceback.format_exc()}")
 
         return InvoiceOrderResponse(
             success=True,
