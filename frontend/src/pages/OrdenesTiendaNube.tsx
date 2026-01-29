@@ -547,38 +547,43 @@ export default function OrdenesTiendaNube() {
 
               {/* Cliente */}
               {selectedFactura.cliente && (
-                <Box borderTopWidth="1" borderColor="neutral-surfaceHighlight" borderStyle="solid" paddingTop="4">
-                  <Text fontSize="caption" color="neutral-textLow">Cliente</Text>
-                  <Text fontWeight="medium">{selectedFactura.cliente.razon_social}</Text>
-                  <Text fontSize="caption">CUIT: {selectedFactura.cliente.cuit}</Text>
-                </Box>
+                <>
+                  <hr className="tn-separator" />
+                  <Box>
+                    <Text fontSize="caption" color="neutral-textLow">Cliente</Text>
+                    <Text fontWeight="medium">{selectedFactura.cliente.razon_social}</Text>
+                    <Text fontSize="caption">CUIT: {selectedFactura.cliente.cuit}</Text>
+                  </Box>
+                </>
               )}
 
               {/* Items */}
               {selectedFactura.items && selectedFactura.items.length > 0 && (
-                <Box borderTopWidth="1" borderColor="neutral-surfaceHighlight" borderStyle="solid" paddingTop="4">
-                  <Box marginBottom="2">
-                    <Text fontSize="caption" color="neutral-textLow">Detalle</Text>
-                  </Box>
-                  {selectedFactura.items.map((item, index) => (
-                    <Box key={index} display="flex" justifyContent="space-between" paddingY="1">
-                      <Text fontSize="caption">{item.cantidad}x {item.descripcion}</Text>
-                      <Text fontSize="caption" fontWeight="medium">
-                        ${Number(item.subtotal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                      </Text>
+                <>
+                  <hr className="tn-separator" />
+                  <Box>
+                    <Box marginBottom="2">
+                      <Text fontSize="caption" color="neutral-textLow">Detalle</Text>
                     </Box>
-                  ))}
-                </Box>
+                    {selectedFactura.items.map((item, index) => (
+                      <Box key={index} display="flex" justifyContent="space-between" paddingY="1">
+                        <Text fontSize="caption">{item.cantidad}x {item.descripcion}</Text>
+                        <Text fontSize="caption" fontWeight="medium">
+                          ${Number(item.subtotal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                        </Text>
+                      </Box>
+                    ))}
+                  </Box>
+                </>
               )}
 
               {/* Total */}
-              <Box borderTopWidth="1" borderColor="neutral-surfaceHighlight" borderStyle="solid" paddingTop="4">
-                <Box display="flex" justifyContent="space-between">
-                  <Text fontWeight="bold">Total</Text>
-                  <Text fontWeight="bold">
-                    ${Number(selectedFactura.total).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                  </Text>
-                </Box>
+              <hr className="tn-separator" />
+              <Box display="flex" justifyContent="space-between">
+                <Text fontWeight="bold">Total</Text>
+                <Text fontWeight="bold">
+                  ${Number(selectedFactura.total).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                </Text>
               </Box>
             </Box>
           ) : null}

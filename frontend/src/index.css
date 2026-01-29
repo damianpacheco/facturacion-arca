@@ -598,6 +598,14 @@ body {
   margin: 0 0 1rem;
 }
 
+/* Separador horizontal */
+.tn-separator {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 1rem 0;
+  padding: 0;
+}
+
 /* Overrides de Nimbus para consistencia */
 [class*="nimbus--card"] {
   border-radius: 8px !important;

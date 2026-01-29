@@ -189,67 +189,53 @@ export default function Configuracion() {
               </Box>
 
               {/* Configuración de facturación */}
-              <Box 
-                borderTopWidth="1" 
-                borderColor="neutral-surfaceHighlight" 
-                borderStyle="solid" 
-                paddingTop="4"
-                marginTop="2"
-              >
-                <Box display="flex" alignItems="center" justifyContent="space-between" marginBottom="4">
-                  <Box>
-                    <Text fontWeight="medium">Facturación automática</Text>
-                    <Text fontSize="caption" color="neutral-textLow">
-                      Emitir factura automáticamente cuando se paga una orden
-                    </Text>
-                  </Box>
-                  <Toggle
-                    name="auto-invoice"
-                    checked={tnStatus.auto_invoice}
-                    onChange={(e) => handleAutoInvoiceChange(e.target.checked)}
-                    disabled={updateTnConfig.isPending}
-                  />
-                </Box>
-
+              <hr className="tn-separator" />
+              <Box display="flex" alignItems="center" justifyContent="space-between" marginBottom="4">
                 <Box>
-                  <Label htmlFor="default-type">Tipo de comprobante por defecto</Label>
-                  <Box width="200px" marginTop="1">
-                    <Select
-                      id="default-type"
-                      name="default-type"
-                      value={String(tnStatus.default_invoice_type)}
-                      onChange={(e) => handleDefaultTypeChange(e.target.value)}
-                      disabled={updateTnConfig.isPending}
-                    >
-                      {TIPO_COMPROBANTE_OPTIONS.map((opt) => (
-                        <Select.Option key={opt.value} label={opt.label} value={opt.value} />
-                      ))}
-                    </Select>
-                  </Box>
-                  <Box marginTop="1">
-                    <Text fontSize="caption" color="neutral-textLow">
-                      Si el cliente tiene CUIT, se usará Factura A automáticamente
-                    </Text>
-                  </Box>
+                  <Text fontWeight="medium">Facturación automática</Text>
+                  <Text fontSize="caption" color="neutral-textLow">
+                    Emitir factura automáticamente cuando se paga una orden
+                  </Text>
+                </Box>
+                <Toggle
+                  name="auto-invoice"
+                  checked={tnStatus.auto_invoice}
+                  onChange={(e) => handleAutoInvoiceChange(e.target.checked)}
+                  disabled={updateTnConfig.isPending}
+                />
+              </Box>
+
+              <Box>
+                <Label htmlFor="default-type">Tipo de comprobante por defecto</Label>
+                <Box width="200px" marginTop="1">
+                  <Select
+                    id="default-type"
+                    name="default-type"
+                    value={String(tnStatus.default_invoice_type)}
+                    onChange={(e) => handleDefaultTypeChange(e.target.value)}
+                    disabled={updateTnConfig.isPending}
+                  >
+                    {TIPO_COMPROBANTE_OPTIONS.map((opt) => (
+                      <Select.Option key={opt.value} label={opt.label} value={opt.value} />
+                    ))}
+                  </Select>
+                </Box>
+                <Box marginTop="1">
+                  <Text fontSize="caption" color="neutral-textLow">
+                    Si el cliente tiene CUIT, se usará Factura A automáticamente
+                  </Text>
                 </Box>
               </Box>
 
               {/* Botón desconectar */}
-              <Box 
-                marginTop="4" 
-                borderTopWidth="1" 
-                borderStyle="solid" 
-                borderColor="neutral-surfaceHighlight" 
-                paddingTop="4"
+              <hr className="tn-separator" />
+              <Button
+                appearance="danger"
+                onClick={() => disconnectTn.mutate()}
+                disabled={disconnectTn.isPending}
               >
-                <Button
-                  appearance="danger"
-                  onClick={() => disconnectTn.mutate()}
-                  disabled={disconnectTn.isPending}
-                >
-                  {disconnectTn.isPending ? <Spinner size="small" /> : 'Desconectar tienda'}
-                </Button>
-              </Box>
+                {disconnectTn.isPending ? <Spinner size="small" /> : 'Desconectar tienda'}
+              </Button>
             </Box>
           ) : (
             <Box display="flex" flexDirection="column" gap="3">
