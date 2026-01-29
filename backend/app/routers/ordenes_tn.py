@@ -370,9 +370,19 @@ async def invoice_order(
             tipo_comprobante = 1  # Factura A
 
         # Buscar o crear cliente
-        cuit = (cliente_data.get("cuit") or "").replace("-", "")
+        cuit_raw = (cliente_data.get("cuit") or "").replace("-", "").strip()
         
-        if cuit:
+        # Normalizar CUIT: si es DNI (8 dígitos), convertir a CUIT genérico
+        # Si está vacío o es inválido, usar CUIT genérico para Consumidor Final
+        if cuit_raw and len(cuit_raw) == 11 and cuit_raw.isdigit():
+            cuit = cuit_raw
+        elif cuit_raw and len(cuit_raw) == 8 and cuit_raw.isdigit():
+            # DNI: usar formato 20-DNI-X (X=dígito verificador simplificado)
+            cuit = f"20{cuit_raw}0"  # Formato aproximado para DNI
+        else:
+            cuit = "00000000000"  # Consumidor Final genérico
+        
+        if cuit != "00000000000":
             result = await db.execute(
                 select(Cliente).where(Cliente.cuit == cuit)
             )
@@ -384,7 +394,7 @@ async def invoice_order(
             # Crear nuevo cliente
             cliente = Cliente(
                 razon_social=cliente_data["razon_social"],
-                cuit=cuit or "00000000000",  # CUIT genérico para Consumidor Final
+                cuit=cuit,
                 condicion_iva=cliente_data["condicion_iva"],
                 domicilio=cliente_data.get("domicilio", ""),
                 email=cliente_data.get("email", ""),

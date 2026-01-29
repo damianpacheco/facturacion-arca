@@ -143,17 +143,30 @@ async def obtener_factura(
     db: AsyncSession = Depends(get_db),
 ):
     """Obtiene el detalle completo de una factura."""
-    result = await db.execute(
-        select(Factura)
-        .options(selectinload(Factura.cliente), selectinload(Factura.items))
-        .where(Factura.id == factura_id)
-    )
-    factura = result.scalar_one_or_none()
+    try:
+        result = await db.execute(
+            select(Factura)
+            .options(selectinload(Factura.cliente), selectinload(Factura.items))
+            .where(Factura.id == factura_id)
+        )
+        factura = result.scalar_one_or_none()
 
-    if not factura:
-        raise HTTPException(status_code=404, detail="Factura no encontrada")
+        if not factura:
+            raise HTTPException(status_code=404, detail="Factura no encontrada")
 
-    return factura
+        # Verificar que el cliente existe
+        if not factura.cliente:
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Error: La factura {factura_id} no tiene cliente asociado"
+            )
+
+        return factura
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error obteniendo factura {factura_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error al obtener factura: {str(e)}")
 
 
 @router.post("", response_model=FacturaResponse, status_code=201)
