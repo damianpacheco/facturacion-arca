@@ -21,7 +21,7 @@ class AIService:
         if not api_key:
             return None
         genai.configure(api_key=api_key)
-        return genai.GenerativeModel("gemini-2.0-flash")
+        return genai.GenerativeModel("gemini-1.5-flash-latest")
 
     async def get_sales_stats(self, db: AsyncSession) -> dict:
         """Obtiene estadísticas de ventas para contexto del AI."""
