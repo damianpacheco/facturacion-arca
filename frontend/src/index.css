@@ -1,14 +1,36 @@
 @import "@nimbus-ds/styles/dist/index.css";
 
-/* Variables consistentes con TiendaNube Admin */
+/* Variables basadas en Nimbus Design Tokens */
 :root {
   --sidebar-width: 260px;
-  --content-bg: #f6f6f6;
-  --card-bg: #ffffff;
-  --border-color: #e8e8e8;
-  --text-primary: #14171a;
-  --text-secondary: #6b7075;
-  --link-color: #0070e0;
+  /* Neutral colors */
+  --neutral-background: #ffffff;
+  --neutral-surface: #f6f6f6;
+  --neutral-surface-highlight: #d1d1d1;
+  --neutral-text-low: #5d5d5d;
+  --neutral-text-high: #0a0a0a;
+  --neutral-text-disabled: #6d6d6d;
+  /* Primary colors */
+  --primary-interactive: #0059d5;
+  --primary-interactive-hover: #00429f;
+  --primary-surface: #eef5ff;
+  /* Success colors */
+  --success-surface: #defef2;
+  --success-text-low: #005333;
+  --success-interactive: #00c87b;
+  /* Warning colors */
+  --warning-surface: #fef2de;
+  --warning-text-low: #533300;
+  /* Danger colors */
+  --danger-surface: #fedede;
+  --danger-text-low: #530001;
+  /* Aliases */
+  --content-bg: var(--neutral-surface);
+  --card-bg: var(--neutral-background);
+  --border-color: #e7e7e7;
+  --text-primary: var(--neutral-text-high);
+  --text-secondary: var(--neutral-text-low);
+  --link-color: var(--primary-interactive);
   --transition-fast: 0.15s ease;
 }
 
@@ -226,7 +248,7 @@ body {
   text-decoration: underline;
 }
 
-/* Tags estilo TiendaNube */
+/* Tags estilo TiendaNube - usando Nimbus tokens */
 .tn-tag {
   display: inline-flex;
   align-items: center;
@@ -239,26 +261,26 @@ body {
 }
 
 .tn-tag-success {
-  background: #e6f4ea;
-  color: #1e7e34;
+  background: var(--success-surface);
+  color: var(--success-text-low);
 }
 
 .tn-tag-warning {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--warning-surface);
+  color: var(--warning-text-low);
 }
 
 .tn-tag-danger {
-  background: #fce8e8;
-  color: #c9302c;
+  background: var(--danger-surface);
+  color: var(--danger-text-low);
 }
 
 .tn-tag-neutral {
-  background: #f0f0f0;
-  color: #5c5c5c;
+  background: var(--neutral-surface);
+  color: var(--neutral-text-low);
 }
 
-/* Filtros rápidos estilo TiendaNube */
+/* Filtros rápidos estilo TiendaNube - usando Nimbus tokens */
 .tn-quick-filters {
   display: flex;
   align-items: center;
@@ -276,7 +298,7 @@ body {
   border-radius: 16px;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--neutral-text-low);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -285,12 +307,12 @@ body {
 }
 
 .tn-quick-filter:hover {
-  background: #f0f0f0;
+  background: var(--neutral-surface);
 }
 
 .tn-quick-filter.active {
-  background: #e8f0fe;
-  color: var(--link-color);
+  background: var(--primary-surface);
+  color: var(--primary-interactive);
 }
 
 .tn-quick-filter-badge {
@@ -303,13 +325,13 @@ body {
   border-radius: 10px;
   font-size: 0.6875rem;
   font-weight: 600;
-  background: #e0e0e0;
-  color: var(--text-secondary);
+  background: var(--neutral-surface-highlight);
+  color: var(--neutral-text-low);
 }
 
 .tn-quick-filter.active .tn-quick-filter-badge {
-  background: var(--link-color);
-  color: white;
+  background: var(--primary-interactive);
+  color: var(--neutral-background);
 }
 
 /* Barra de búsqueda */
@@ -341,7 +363,7 @@ body {
   color: #9ca3af;
 }
 
-/* Botones estilo TiendaNube */
+/* Botones estilo TiendaNube - usando Nimbus tokens */
 .tn-btn {
   display: inline-flex;
   align-items: center;
@@ -358,34 +380,34 @@ body {
 }
 
 .tn-btn-primary {
-  background: var(--link-color);
-  color: white;
-  border-color: var(--link-color);
+  background: var(--primary-interactive);
+  color: var(--neutral-background);
+  border-color: var(--primary-interactive);
 }
 
 .tn-btn-primary:hover {
-  background: #005bb5;
-  border-color: #005bb5;
+  background: var(--primary-interactive-hover);
+  border-color: var(--primary-interactive-hover);
 }
 
 .tn-btn-secondary {
-  background: var(--card-bg);
-  color: var(--text-primary);
+  background: var(--neutral-background);
+  color: var(--neutral-text-high);
   border-color: var(--border-color);
 }
 
 .tn-btn-secondary:hover {
-  background: #f5f5f5;
+  background: var(--neutral-surface);
 }
 
 .tn-btn-ghost {
   background: transparent;
-  color: var(--text-primary);
+  color: var(--neutral-text-high);
   border-color: transparent;
 }
 
 .tn-btn-ghost:hover {
-  background: #f0f0f0;
+  background: var(--neutral-surface);
 }
 
 /* Empty state */

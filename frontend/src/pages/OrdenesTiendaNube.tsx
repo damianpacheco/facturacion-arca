@@ -25,8 +25,10 @@ import {
   DownloadIcon,
   CogIcon,
   PlusCircleIcon,
+  InvoiceIcon,
 } from '@nimbus-ds/icons'
-import api, { getTiendaNubeInstallUrl, getFacturaPdfUrl } from '../services/api'
+import api, { getTiendaNubeInstallUrl, getFacturaPdfUrl, getFactura } from '../services/api'
+import type { FacturaDetalle } from '../types'
 import { useAppContext } from '../contexts/AppContext'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -93,6 +95,11 @@ export default function OrdenesTiendaNube() {
   const [selectedOrder, setSelectedOrder] = useState<TiendaNubeOrder | null>(null)
   const [selectedTipoComprobante, setSelectedTipoComprobante] = useState('6')
 
+  // Modal de ver factura
+  const [viewFacturaModalOpen, setViewFacturaModalOpen] = useState(false)
+  const [selectedFactura, setSelectedFactura] = useState<FacturaDetalle | null>(null)
+  const [loadingFactura, setLoadingFactura] = useState(false)
+
   // Verificar conexión con TiendaNube
   const { data: storeStatus, isLoading: loadingStatus } = useQuery<StoreStatus>({
     queryKey: ['tiendanube-status'],
@@ -154,6 +161,19 @@ export default function OrdenesTiendaNube() {
       orderId: String(selectedOrder.id),
       tipoComprobante: parseInt(selectedTipoComprobante),
     })
+  }
+
+  const handleViewFactura = async (facturaId: number) => {
+    setLoadingFactura(true)
+    setViewFacturaModalOpen(true)
+    try {
+      const factura = await getFactura(facturaId)
+      setSelectedFactura(factura)
+    } catch (error) {
+      console.error('Error al cargar factura:', error)
+    } finally {
+      setLoadingFactura(false)
+    }
   }
 
   const formatDate = (dateStr: string) => {
@@ -313,7 +333,7 @@ export default function OrdenesTiendaNube() {
                   <th>Total</th>
                   <th>Pago</th>
                   <th>Factura</th>
-                  <th></th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -367,19 +387,24 @@ export default function OrdenesTiendaNube() {
                             onClick={() => handleOpenInvoiceModal(order)}
                             title="Facturar"
                           >
-                            <PlusCircleIcon size={16} />
+                            <InvoiceIcon size={16} />
                           </button>
                         )}
                         {order.factura_id && (
                           <>
-                            <Link to={`/facturas?id=${order.factura_id}`} className="tn-icon-btn">
+                            <button
+                              className="tn-icon-btn"
+                              onClick={() => handleViewFactura(order.factura_id!)}
+                              title="Ver factura"
+                            >
                               <EyeIcon size={16} />
-                            </Link>
+                            </button>
                             <a
                               href={getFacturaPdfUrl(order.factura_id)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="tn-icon-btn"
+                              title="Descargar PDF"
                             >
                               <DownloadIcon size={16} />
                             </a>
@@ -481,6 +506,103 @@ export default function OrdenesTiendaNube() {
           >
             {invoiceMutation.isPending ? <Spinner size="small" /> : 'Facturar'}
           </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de ver factura */}
+      <Modal 
+        open={viewFacturaModalOpen} 
+        onDismiss={() => {
+          setViewFacturaModalOpen(false)
+          setSelectedFactura(null)
+        }}
+      >
+        <Modal.Header title={selectedFactura ? `Factura ${selectedFactura.numero_completo}` : 'Cargando...'} />
+        <Modal.Body>
+          {loadingFactura ? (
+            <Box display="flex" justifyContent="center" padding="4">
+              <Spinner size="large" />
+            </Box>
+          ) : selectedFactura ? (
+            <Box display="flex" flexDirection="column" gap="4">
+              {/* Info general */}
+              <Box display="flex" gap="4" flexWrap="wrap">
+                <Box flex="1" minWidth="120px">
+                  <Text fontSize="caption" color="neutral-textLow">Fecha</Text>
+                  <Text fontWeight="medium">
+                    {format(new Date(selectedFactura.fecha), 'dd/MM/yyyy', { locale: es })}
+                  </Text>
+                </Box>
+                <Box flex="1" minWidth="120px">
+                  <Text fontSize="caption" color="neutral-textLow">Estado</Text>
+                  <span className={`tn-tag ${selectedFactura.estado === 'autorizada' ? 'tn-tag-success' : 'tn-tag-danger'}`}>
+                    {selectedFactura.estado}
+                  </span>
+                </Box>
+                <Box flex="1" minWidth="120px">
+                  <Text fontSize="caption" color="neutral-textLow">CAE</Text>
+                  <Text fontSize="caption">{selectedFactura.cae || '-'}</Text>
+                </Box>
+              </Box>
+
+              {/* Cliente */}
+              {selectedFactura.cliente && (
+                <Box borderTopWidth="1" borderColor="neutral-surfaceHighlight" borderStyle="solid" paddingTop="4">
+                  <Text fontSize="caption" color="neutral-textLow">Cliente</Text>
+                  <Text fontWeight="medium">{selectedFactura.cliente.razon_social}</Text>
+                  <Text fontSize="caption">CUIT: {selectedFactura.cliente.cuit}</Text>
+                </Box>
+              )}
+
+              {/* Items */}
+              {selectedFactura.items && selectedFactura.items.length > 0 && (
+                <Box borderTopWidth="1" borderColor="neutral-surfaceHighlight" borderStyle="solid" paddingTop="4">
+                  <Box marginBottom="2">
+                    <Text fontSize="caption" color="neutral-textLow">Detalle</Text>
+                  </Box>
+                  {selectedFactura.items.map((item, index) => (
+                    <Box key={index} display="flex" justifyContent="space-between" paddingY="1">
+                      <Text fontSize="caption">{item.cantidad}x {item.descripcion}</Text>
+                      <Text fontSize="caption" fontWeight="medium">
+                        ${Number(item.subtotal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      </Text>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+
+              {/* Total */}
+              <Box borderTopWidth="1" borderColor="neutral-surfaceHighlight" borderStyle="solid" paddingTop="4">
+                <Box display="flex" justifyContent="space-between">
+                  <Text fontWeight="bold">Total</Text>
+                  <Text fontWeight="bold">
+                    ${Number(selectedFactura.total).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                  </Text>
+                </Box>
+              </Box>
+            </Box>
+          ) : null}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={() => {
+            setViewFacturaModalOpen(false)
+            setSelectedFactura(null)
+          }}>
+            Cerrar
+          </Button>
+          {selectedFactura && (
+            <a
+              href={getFacturaPdfUrl(selectedFactura.id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'none' }}
+            >
+              <Button appearance="primary">
+                <DownloadIcon size="small" />
+                Descargar PDF
+              </Button>
+            </a>
+          )}
         </Modal.Footer>
       </Modal>
     </>
