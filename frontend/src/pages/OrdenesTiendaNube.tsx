@@ -27,6 +27,7 @@ import {
   CogIcon,
   PlusCircleIcon,
   InvoiceIcon,
+  GenerativeStarsIcon,
 } from '@nimbus-ds/icons'
 import api, { getTiendaNubeInstallUrl, getFacturaPdfUrl, getFactura } from '../services/api'
 import type { FacturaDetalle } from '../types'
@@ -87,6 +88,9 @@ export default function OrdenesTiendaNube() {
   const queryClient = useQueryClient()
   const justConnected = searchParams.get('connected') === 'true'
   const { isEmbedded } = useAppContext()
+
+  // Estado del asistente IA
+  const [aiPanelOpen, setAiPanelOpen] = useState(false)
 
   // Filtros
   const [paymentStatusFilter] = useState<string>('paid')
@@ -256,10 +260,19 @@ export default function OrdenesTiendaNube() {
         </div>
         <div className="tn-page-header-right">
           {isEmbedded && (
-            <Link to="/configuracion" className="tn-btn tn-btn-secondary">
-              <CogIcon size="small" />
-              Configuración
-            </Link>
+            <>
+              <button 
+                className="tn-btn tn-btn-secondary"
+                onClick={() => setAiPanelOpen(true)}
+              >
+                <GenerativeStarsIcon size="small" />
+                Insights con IA
+              </button>
+              <Link to="/configuracion" className="tn-btn tn-btn-secondary">
+                <CogIcon size="small" />
+                Configuración
+              </Link>
+            </>
           )}
           <button className="tn-btn tn-btn-secondary" onClick={() => refetchOrders()}>
             <RedoIcon size="small" />
@@ -611,7 +624,12 @@ export default function OrdenesTiendaNube() {
       </Modal>
 
       {/* Asistente de ventas con IA (solo en modo iframe) */}
-      {isEmbedded && <SalesAssistant />}
+      {isEmbedded && (
+        <SalesAssistant 
+          isOpen={aiPanelOpen} 
+          onClose={() => setAiPanelOpen(false)} 
+        />
+      )}
     </>
   )
 }

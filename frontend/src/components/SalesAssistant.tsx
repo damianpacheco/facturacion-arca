@@ -1,8 +1,8 @@
 /**
- * Asistente de ventas con IA - Botón flotante con chat desplegable.
+ * Asistente de ventas con IA - Panel de chat controlado externamente.
  */
 
-import { useState, useRef, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Box, Text, Button, Spinner } from '@nimbus-ds/components'
 import { ChevronRightIcon, GenerativeStarsIcon } from '@nimbus-ds/icons'
@@ -15,6 +15,11 @@ interface Message {
   content: string
 }
 
+interface SalesAssistantProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
 const SUGGESTED_QUESTIONS = [
   '¿Cómo vienen mis ventas este mes?',
   '¿Cuál es mi mejor cliente?',
@@ -22,8 +27,9 @@ const SUGGESTED_QUESTIONS = [
   '¿Cómo me fue vs el mes pasado?',
 ]
 
-export default function SalesAssistant() {
-  const [isOpen, setIsOpen] = useState(false)
+import { useState } from 'react'
+
+export default function SalesAssistant({ isOpen, onClose }: SalesAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -93,39 +99,25 @@ export default function SalesAssistant() {
     handleSend(question)
   }
 
-  return (
-    <>
-      {/* Botón flotante */}
-      <button
-        className="sales-assistant-fab"
-        onClick={() => setIsOpen(!isOpen)}
-        title="Asistente de ventas"
-      >
-        {isOpen ? (
-          <span style={{ fontSize: '24px', lineHeight: 1 }}>×</span>
-        ) : (
-          <GenerativeStarsIcon size={24} />
-        )}
-      </button>
+  if (!isOpen) return null
 
-      {/* Panel de chat */}
-      {isOpen && (
-        <div className="sales-assistant-panel">
-          {/* Header */}
-          <div className="sales-assistant-header">
-            <Box display="flex" alignItems="center" gap="2">
-              <GenerativeStarsIcon size={20} />
-              <Text fontWeight="bold" color="neutral-background">
-                Asistente de Ventas
-              </Text>
-            </Box>
-            <button
-              className="sales-assistant-close"
-              onClick={() => setIsOpen(false)}
-            >
-              <span style={{ fontSize: '18px', lineHeight: 1 }}>×</span>
-            </button>
-          </div>
+  return (
+    <div className="sales-assistant-panel">
+      {/* Header */}
+      <div className="sales-assistant-header">
+        <Box display="flex" alignItems="center" gap="2">
+          <GenerativeStarsIcon size={20} />
+          <Text fontWeight="bold" color="neutral-background">
+            Asistente de Ventas
+          </Text>
+        </Box>
+        <button
+          className="sales-assistant-close"
+          onClick={onClose}
+        >
+          <span style={{ fontSize: '18px', lineHeight: 1 }}>×</span>
+        </button>
+      </div>
 
           {/* Messages */}
           <div className="sales-assistant-messages">
@@ -176,26 +168,24 @@ export default function SalesAssistant() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <form className="sales-assistant-input" onSubmit={handleSubmit}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Preguntá sobre tus ventas..."
-              disabled={chatMutation.isPending}
-            />
-            <Button
-              type="submit"
-              appearance="primary"
-              disabled={!inputValue.trim() || chatMutation.isPending}
-            >
-              <ChevronRightIcon size="small" />
-            </Button>
-          </form>
-        </div>
-      )}
-    </>
+      {/* Input */}
+      <form className="sales-assistant-input" onSubmit={handleSubmit}>
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="Preguntá sobre tus ventas..."
+          disabled={chatMutation.isPending}
+        />
+        <Button
+          type="submit"
+          appearance="primary"
+          disabled={!inputValue.trim() || chatMutation.isPending}
+        >
+          <ChevronRightIcon size="small" />
+        </Button>
+      </form>
+    </div>
   )
 }
