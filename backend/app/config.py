@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     
     # Backend URL (para URLs públicas como PDF de facturas)
     backend_url: str = "http://localhost:8000"
+    
+    # Google Gemini AI (para asistente de ventas)
+    gemini_api_key: str = ""
 
     class Config:
         env_file = ".env"

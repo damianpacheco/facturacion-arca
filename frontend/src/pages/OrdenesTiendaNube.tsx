@@ -31,6 +31,7 @@ import {
 import api, { getTiendaNubeInstallUrl, getFacturaPdfUrl, getFactura } from '../services/api'
 import type { FacturaDetalle } from '../types'
 import { useAppContext } from '../contexts/AppContext'
+import SalesAssistant from '../components/SalesAssistant'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -608,6 +609,9 @@ export default function OrdenesTiendaNube() {
           )}
         </Modal.Footer>
       </Modal>
+
+      {/* Asistente de ventas con IA (solo en modo iframe) */}
+      {isEmbedded && <SalesAssistant />}
     </>
   )
 }

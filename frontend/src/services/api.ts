@@ -133,4 +133,15 @@ export function getTiendaNubeInstallUrl(): string {
   return `${baseUrl}/tiendanube/install`
 }
 
+// ============ AI ASSISTANT ============
+
+export interface ChatResponse {
+  response: string
+}
+
+export async function sendChatMessage(message: string): Promise<ChatResponse> {
+  const response = await api.post<ChatResponse>('/ai/chat', { message })
+  return response.data
+}
+
 export default api

@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 
 from app.config import get_settings
 from app.models import Base, engine
-from app.routers import clientes, facturas, arca, tiendanube, ordenes_tn, webhooks
+from app.routers import clientes, facturas, arca, tiendanube, ordenes_tn, webhooks, ai
 
 settings = get_settings()
 
@@ -67,6 +67,7 @@ app.include_router(arca.router, prefix="/api/arca", tags=["ARCA"])
 app.include_router(tiendanube.router, prefix="/api/tiendanube", tags=["TiendaNube"])
 app.include_router(ordenes_tn.router, prefix="/api/ordenes-tn", tags=["Órdenes TiendaNube"])
 app.include_router(webhooks.router, prefix="/api/webhooks", tags=["Webhooks"])
+app.include_router(ai.router, prefix="/api/ai", tags=["AI Assistant"])
 
 # Servir frontend estático en producción
 if STATIC_DIR.exists():
