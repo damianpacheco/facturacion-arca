@@ -267,7 +267,7 @@ async def invoice_order(
 
         # Buscar o crear cliente
         cliente_data = invoice_data["cliente"]
-        cuit = cliente_data.get("cuit", "").replace("-", "")
+        cuit = (cliente_data.get("cuit") or "").replace("-", "")
         
         if cuit:
             result = await db.execute(

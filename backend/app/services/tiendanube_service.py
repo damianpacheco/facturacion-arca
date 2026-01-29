@@ -147,13 +147,13 @@ class TiendaNubeService:
 def map_order_to_invoice_data(order: Dict[str, Any]) -> Dict[str, Any]:
     """Mapea una orden de TiendaNube a datos de factura."""
     # Extraer datos del cliente
-    customer = order.get("customer", {})
+    customer = order.get("customer") or {}
     billing_data = {
-        "razon_social": order.get("billing_name") or customer.get("name", "Consumidor Final"),
-        "cuit": order.get("contact_identification") or customer.get("identification", ""),
-        "domicilio": order.get("billing_address", ""),
-        "email": order.get("contact_email") or customer.get("email", ""),
-        "telefono": order.get("contact_phone") or customer.get("phone", ""),
+        "razon_social": order.get("billing_name") or customer.get("name") or "Consumidor Final",
+        "cuit": order.get("contact_identification") or customer.get("identification") or "",
+        "domicilio": order.get("billing_address") or "",
+        "email": order.get("contact_email") or customer.get("email") or "",
+        "telefono": order.get("contact_phone") or customer.get("phone") or "",
     }
 
     # Determinar condición IVA basado en si pide Factura A
