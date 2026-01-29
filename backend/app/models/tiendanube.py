@@ -73,6 +73,11 @@ class TiendaNubeOrder(Base):
     customer_email: str = Column(String(255), nullable=True)
     customer_identification: str = Column(String(50), nullable=True)
     
+    # Datos del cliente modificados/agregados para facturación
+    customer_override_name: str = Column(String(255), nullable=True)
+    customer_override_cuit: str = Column(String(20), nullable=True)
+    customer_override_condicion_iva: str = Column(String(50), nullable=True)
+    
     # Timestamps
     order_created_at: Optional[datetime] = Column(DateTime, nullable=True)
     invoiced_at: Optional[datetime] = Column(DateTime, nullable=True)

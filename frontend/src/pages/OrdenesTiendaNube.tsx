@@ -51,6 +51,10 @@ interface TiendaNubeOrder {
   invoiced: boolean
   factura_id: number | null
   factura_numero: string | null
+  // Datos del cliente modificados/guardados
+  customer_override_name: string | null
+  customer_override_cuit: string | null
+  customer_override_condicion_iva: string | null
 }
 
 interface OrderListResponse {
@@ -140,6 +144,32 @@ export default function OrdenesTiendaNube() {
     refetchIntervalInBackground: false, // Solo cuando la pestaña está activa
   })
 
+  // Mutación para guardar datos del cliente
+  const saveClienteMutation = useMutation({
+    mutationFn: async ({ orderId, clienteData }: { 
+      orderId: string
+      clienteData: { razon_social: string; cuit: string; condicion_iva: string }
+    }) => {
+      const response = await api.put(`/ordenes-tn/${orderId}/cliente`, clienteData)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tiendanube-orders'] })
+      addToast({
+        id: String(Date.now()),
+        type: 'success',
+        text: 'Datos del cliente guardados',
+      })
+    },
+    onError: (error: Error) => {
+      addToast({
+        id: String(Date.now() + 1),
+        type: 'danger',
+        text: error.message || 'Error al guardar los datos',
+      })
+    },
+  })
+
   // Mutación para facturar
   const invoiceMutation = useMutation<InvoiceResponse, Error, { 
     orderId: string
@@ -181,20 +211,38 @@ export default function OrdenesTiendaNube() {
   const handleOpenInvoiceModal = (order: TiendaNubeOrder) => {
     setSelectedOrder(order)
     
-    // Inicializar datos del cliente desde la orden
-    setClienteNombre(order.customer_name || '')
-    setClienteCuit(order.customer_identification || '')
-    setEditClienteEnabled(false)
+    // Verificar si hay datos del cliente guardados/modificados
+    const hasOverride = order.customer_override_cuit && order.customer_override_cuit.trim() !== ''
     
-    // Determinar condición IVA y tipo comprobante según CUIT
-    if (order.customer_identification && 
-        order.customer_identification.trim() !== '' &&
-        order.customer_identification.length === 11) {
-      setSelectedTipoComprobante('1') // Factura A
-      setClienteCondicionIva('Responsable Inscripto')
+    if (hasOverride) {
+      // Usar datos guardados
+      setClienteNombre(order.customer_override_name || order.customer_name || '')
+      setClienteCuit(order.customer_override_cuit || '')
+      setClienteCondicionIva(order.customer_override_condicion_iva || 'Consumidor Final')
+      setEditClienteEnabled(true) // Mostrar que hay datos editados
+      
+      // Tipo de comprobante según condición IVA guardada
+      if (order.customer_override_condicion_iva === 'Responsable Inscripto') {
+        setSelectedTipoComprobante('1')
+      } else {
+        setSelectedTipoComprobante('6')
+      }
     } else {
-      setSelectedTipoComprobante('6') // Factura B
-      setClienteCondicionIva('Consumidor Final')
+      // Usar datos originales de la orden
+      setClienteNombre(order.customer_name || '')
+      setClienteCuit(order.customer_identification || '')
+      setEditClienteEnabled(false)
+      
+      // Determinar condición IVA y tipo comprobante según CUIT original
+      if (order.customer_identification && 
+          order.customer_identification.trim() !== '' &&
+          order.customer_identification.length === 11) {
+        setSelectedTipoComprobante('1') // Factura A
+        setClienteCondicionIva('Responsable Inscripto')
+      } else {
+        setSelectedTipoComprobante('6') // Factura B
+        setClienteCondicionIva('Consumidor Final')
+      }
     }
     setInvoiceModalOpen(true)
   }
@@ -212,6 +260,19 @@ export default function OrdenesTiendaNube() {
       orderId: String(selectedOrder.id),
       tipoComprobante: parseInt(selectedTipoComprobante),
       clienteData,
+    })
+  }
+
+  const handleSaveCliente = () => {
+    if (!selectedOrder || !editClienteEnabled) return
+    
+    saveClienteMutation.mutate({
+      orderId: String(selectedOrder.id),
+      clienteData: {
+        razon_social: clienteNombre.trim() || 'Consumidor Final',
+        cuit: clienteCuit.trim(),
+        condicion_iva: clienteCondicionIva,
+      },
     })
   }
 
@@ -603,14 +664,27 @@ export default function OrdenesTiendaNube() {
           </Box>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={() => setInvoiceModalOpen(false)}>Cancelar</Button>
-          <Button
-            appearance="primary"
-            onClick={handleInvoice}
-            disabled={invoiceMutation.isPending}
-          >
-            {invoiceMutation.isPending ? <Spinner size="small" /> : 'Facturar'}
-          </Button>
+          <Box display="flex" gap="2" justifyContent="space-between" width="100%">
+            <Button onClick={() => setInvoiceModalOpen(false)}>Cancelar</Button>
+            <Box display="flex" gap="2">
+              {editClienteEnabled && (
+                <Button
+                  appearance="neutral"
+                  onClick={handleSaveCliente}
+                  disabled={saveClienteMutation.isPending || !clienteNombre.trim()}
+                >
+                  {saveClienteMutation.isPending ? <Spinner size="small" /> : 'Guardar datos'}
+                </Button>
+              )}
+              <Button
+                appearance="primary"
+                onClick={handleInvoice}
+                disabled={invoiceMutation.isPending}
+              >
+                {invoiceMutation.isPending ? <Spinner size="small" /> : 'Facturar'}
+              </Button>
+            </Box>
+          </Box>
         </Modal.Footer>
       </Modal>
 

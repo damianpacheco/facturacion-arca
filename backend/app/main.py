@@ -18,12 +18,38 @@ settings = get_settings()
 STATIC_DIR = Path(__file__).parent.parent / "static"
 
 
+async def run_migrations(conn):
+    """Ejecuta migraciones de base de datos."""
+    from sqlalchemy import text, inspect
+    
+    inspector = inspect(conn)
+    
+    # Verificar si la tabla tiendanube_orders existe y agregarle columnas nuevas
+    if 'tiendanube_orders' in inspector.get_table_names():
+        existing_columns = [col['name'] for col in inspector.get_columns('tiendanube_orders')]
+        
+        # Agregar columnas de override de cliente si no existen
+        new_columns = [
+            ('customer_override_name', 'VARCHAR(255)'),
+            ('customer_override_cuit', 'VARCHAR(20)'),
+            ('customer_override_condicion_iva', 'VARCHAR(50)'),
+        ]
+        
+        for col_name, col_type in new_columns:
+            if col_name not in existing_columns:
+                try:
+                    conn.execute(text(f'ALTER TABLE tiendanube_orders ADD COLUMN {col_name} {col_type}'))
+                except Exception:
+                    pass  # La columna ya existe o hubo otro error
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Maneja el ciclo de vida de la aplicación."""
-    # Startup: crear tablas
+    # Startup: crear tablas y ejecutar migraciones
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(run_migrations)
     yield
     # Shutdown: cerrar conexiones
     await engine.dispose()
