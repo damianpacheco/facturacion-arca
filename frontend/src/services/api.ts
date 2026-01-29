@@ -102,9 +102,11 @@ export async function createFactura(data: FacturaCreate): Promise<Factura> {
   return response.data
 }
 
-export function getFacturaPdfUrl(id: number): string {
+export function getFacturaPdfUrl(id: number | null): string {
+  if (!id) return '#'
   const baseUrl = import.meta.env.VITE_API_URL || '/api'
-  return `${baseUrl}/facturas/${id}/pdf`
+  // Agregar timestamp para evitar caché del navegador
+  return `${baseUrl}/facturas/${id}/pdf?t=${Date.now()}`
 }
 
 // ============ ARCA ============
